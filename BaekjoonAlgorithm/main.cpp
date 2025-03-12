@@ -22,9 +22,9 @@ public:
 			resize();	
 		}
 
-		Heap[CurrentIndex++] = num;
-		
-		heapify();
+		Heap[CurrentIndex] = num;
+		heapifyUp(CurrentIndex);
+		CurrentIndex++;
 	}
 
 	int Pop()
@@ -35,9 +35,8 @@ public:
 		}
 
 		const int result = Heap[0];
-		Heap[0] = Heap[CurrentIndex - 1];
-		CurrentIndex--;
-		heapify();
+		Heap[0] = Heap[--CurrentIndex];
+		heapifyDown();
 		
 		return result;
 	}
@@ -68,9 +67,53 @@ private:
 	}
 
 private:
-	void heapify()
+	void heapifyUp(const int index)
 	{
-		// TODO
+		int childIndex = index;
+		
+		while (childIndex > 0)
+		{
+			int parentIndex = (childIndex - 1) / 2;
+			if (Heap[parentIndex] > Heap[childIndex])
+			{
+				swap(Heap[childIndex], Heap[parentIndex]);
+				childIndex = parentIndex;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+	
+	void heapifyDown()
+	{
+		int parentIndex = 0;
+
+		while (true)
+		{
+			int leftChildIndex = parentIndex * 2 + 1;
+			int rightChildIndex = parentIndex * 2 + 2;
+			
+			int minChildIndex = parentIndex;
+			if (leftChildIndex < CurrentIndex && Heap[leftChildIndex] < Heap[minChildIndex])
+			{
+				minChildIndex = leftChildIndex;
+			}
+
+			if (rightChildIndex < CurrentIndex && Heap[rightChildIndex] < Heap[minChildIndex])
+			{
+				minChildIndex = rightChildIndex;
+			}
+
+			if (minChildIndex == parentIndex)
+			{
+				break;
+			}
+			
+			swap(Heap[parentIndex], Heap[minChildIndex]);
+			parentIndex = minChildIndex;
+		}
 	}
 	
 private:
@@ -88,11 +131,11 @@ public:
 public:
 	void PrintSolution(const int& num)
 	{
-		AbsoluteValueHeap.Push(num);
+		MinHeap.Push(num);
 
 		if (num == 0)
 		{
-			cout << AbsoluteValueHeap.Pop() << "\n";
+			cout << MinHeap.Pop() << "\n";
 		}
 	}
 
@@ -102,7 +145,7 @@ public:
 	}
 
 private:
-	CBJMinHeap AbsoluteValueHeap;
+	CBJMinHeap MinHeap;
 	int ZeroCounter = 0;
 };
 
