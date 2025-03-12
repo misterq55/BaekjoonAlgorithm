@@ -4,92 +4,79 @@
 
 using namespace std;
 
-class CBJCircularQueue
+class CBJMinHeap
 {
 public:
-	CBJCircularQueue()
+	CBJMinHeap()
 	{
-		Buffer.resize(Capacity);
+		Heap.resize(Capacity);
 	}
-	~CBJCircularQueue() {}
+	
+	~CBJMinHeap() {}
 
 public:
-	void Enqueue(const int num)
+	void Push(const int num)
 	{
-		Rear = (Rear + 1) % Capacity;
-		Buffer[Rear] = num;
-		Size++;
+		if (isFull())
+		{
+			resize();	
+		}
+
+		Heap[CurrentIndex++] = num;
+		
+		heapify();
 	}
 
-	int Dequeue()
+	int Pop()
 	{
-		Front = (Front + 1) % Capacity;
-		return GetFront();
-	}
+		if (isEmpty())
+		{
+			return 0;
+		}
 
-	int GetSize()
-	{
-		return Size;
-	}
-
-	int IsEmpty()
-	{
-		return Front == Rear ? 1 : 0;
-	}
-
-	int GetFront()
-	{
-		if (IsEmpty()) return -1;
-		return Buffer[Front];
-	}
-
-	int GetRear()
-	{
-		if (IsEmpty()) return -1;
-		return Buffer[Rear];
+		const int result = Heap[0];
+		Heap[0] = Heap[CurrentIndex - 1];
+		CurrentIndex--;
+		heapify();
+		
+		return result;
 	}
 
 private:
-	bool isFull()
+	bool isFull() const
 	{
-		return Rear == Size - 1;
+		return CurrentIndex == (Capacity - 1);
 	}
 
+	bool isEmpty() const
+	{
+		return CurrentIndex == 0;
+	}
+	
 	void resize()
 	{
+		vector<int> tempHeap(Capacity * 2);
+
+		for (int i = 0; i < Capacity; i++)
+		{
+			tempHeap[i] = Heap[i];
+		}
+
 		Capacity *= 2;
-		Buffer.resize(Capacity);
+		
+		Heap = move(tempHeap);
 	}
 
 private:
-	vector<int> Buffer;
-	int Front = 0;
-	int Rear = 0;
-	int Capacity = 10;
-	int Size = 0;
-};
-
-class CBJCommandParser
-{
-public:
-	CBJCommandParser() {}
-	virtual ~CBJCommandParser() {}
-	
-public:
-	vector<string> parseCommand(const string& cmd)
+	void heapify()
 	{
-		vector<string> result;
-		string delimiter = " ";
-
-		size_t foundPos = cmd.find(delimiter);
-		string queueCommand = cmd.substr(0, foundPos);
-		string arg = cmd.substr(foundPos + 1);
-
-		result.emplace_back(queueCommand);
-		result.emplace_back(arg);
 		
-		return move(result);
 	}
+	
+private:
+	vector<int> Heap;
+	int Capacity = 10;
+	int CurrentIndex = 0;
 };
 
 class CBJSolution
@@ -99,53 +86,24 @@ public:
 	virtual ~CBJSolution() {}
 
 public:
-	void PrintSolution(const string& cmd)
+	void PrintSolution(const int& num)
 	{
-		vector<string> parsedCmd = CommandParser.parseCommand(cmd);
-		runQueue(parsedCmd);
-	}
+		AbsoluteValueHeap.Push(num);
 
-private:
-	void runQueue(const vector<string>& parsedCmd)
-	{
-		if (parsedCmd.empty())
+		if (num == 0)
 		{
-			return;
-		}
-
-		const string& queueCmd = parsedCmd[0];
-
-		if (queueCmd == "push")
-		{
-			const string arg = parsedCmd[1];
-			const int num = stoi(arg);
-			CircularQueue.Enqueue(num);
-		}
-		else if (queueCmd == "pop")
-		{
-			cout << CircularQueue.Dequeue() << "\n";
-		}
-		else if (queueCmd == "size")
-		{
-			cout << CircularQueue.GetSize() << "\n";
-		}
-		else if (queueCmd == "empty")
-		{
-			cout << CircularQueue.IsEmpty() << "\n";
-		}
-		else if (queueCmd == "front")
-		{
-			cout << CircularQueue.GetFront() << "\n";
-		}
-		else if (queueCmd == "back")
-		{
-			cout << CircularQueue.GetRear() << "\n";
+			cout << AbsoluteValueHeap.Pop() << "\n";
 		}
 	}
 
+	void PrintSolution(const string& question)
+	{
+		
+	}
+
 private:
-	CBJCommandParser CommandParser;
-	CBJCircularQueue CircularQueue;
+	CBJMinHeap AbsoluteValueHeap;
+	int ZeroCounter = 0;
 };
 
 int main()
@@ -154,16 +112,16 @@ int main()
 	cin.tie(NULL);
 	cout.tie(NULL);
 
+	CBJSolution solution;
+
 	int questionNum = 0;
 	cin >> questionNum;
 	cin.ignore();
 
-	CBJSolution solution;
-	
 	for (int i = 0; i < questionNum; ++i)
 	{
-		string question;
-		getline(cin, question);
+		int question;
+		cin >> question;
 		solution.PrintSolution(question);
 	}
 
