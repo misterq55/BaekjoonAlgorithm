@@ -1,152 +1,70 @@
 ﻿#include <iostream>
 #include <string>
 #include <vector>
-
+#include <list>
+#include <cstdlib>
 using namespace std;
 
-class CBJMinHeap
+class CBJHashTable
 {
 public:
-	CBJMinHeap()
+	CBJHashTable()
 	{
-		Heap.resize(Capacity);
+		HashTable.resize(HashValue);	
 	}
 	
-	~CBJMinHeap() {}
+	~CBJHashTable() {}
 
 public:
-	void Push(const int num)
+	void Insert(int value)
 	{
-		if (isFull())
-		{
-			resize();	
-		}
+		const int hashKey = GetHashKey(value);
 
-		Heap[CurrentIndex] = num;
-		heapifyUp(CurrentIndex);
-		CurrentIndex++;
+		list<int>& foundList = HashTable[hashKey];
+
+		for (const int& foundValue : foundList)
+		{
+			if (foundValue == value)
+			{
+				return;
+			}
+		}
+		
+		foundList.push_back(value);
 	}
 
-	int Pop()
+	int Find(int value)
 	{
-		if (isEmpty())
-		{
-			return 0;
-		}
+		const int hashKey = GetHashKey(value);
 
-		const int result = Heap[0];
-		Heap[0] = Heap[--CurrentIndex];
-		heapifyDown();
+		list<int>& foundList = HashTable[hashKey];
+
+		for (const int& foundValue : foundList)
+		{
+			if (foundValue == value)
+			{
+				return 1;
+			}
+		}
 		
-		return result;
+		return 0;
 	}
 
 private:
-	bool isFull() const
+	int GetHashKey(int value)
 	{
-		return CurrentIndex == (Capacity - 1);
-	}
-
-	bool isEmpty() const
-	{
-		return CurrentIndex == 0;
-	}
-	
-	void resize()
-	{
-		vector<int> tempHeap(Capacity * 2);
-
-		for (int i = 0; i < Capacity; i++)
+		int hashKey = value % HashValue;
+		if (hashKey < 0)
 		{
-			tempHeap[i] = Heap[i];
+			hashKey *= -1;
 		}
 
-		Capacity *= 2;
-		
-		Heap = move(tempHeap);
-	}
-
-private:
-	void heapifyUp(const int index)
-	{
-		int childIndex = index;
-		
-		while (childIndex > 0)
-		{
-			int parentIndex = (childIndex - 1) / 2;
-			if (Heap[parentIndex] > Heap[childIndex])
-			{
-				swap(Heap[childIndex], Heap[parentIndex]);
-				childIndex = parentIndex;
-			}
-			else
-			{
-				break;
-			}
-		}
-	}
-	
-	void heapifyDown()
-	{
-		int parentIndex = 0;
-
-		while (true)
-		{
-			int leftChildIndex = parentIndex * 2 + 1;
-			int rightChildIndex = parentIndex * 2 + 2;
-			
-			int minChildIndex = parentIndex;
-			if (leftChildIndex < CurrentIndex && Heap[leftChildIndex] < Heap[minChildIndex])
-			{
-				minChildIndex = leftChildIndex;
-			}
-
-			if (rightChildIndex < CurrentIndex && Heap[rightChildIndex] < Heap[minChildIndex])
-			{
-				minChildIndex = rightChildIndex;
-			}
-
-			if (minChildIndex == parentIndex)
-			{
-				break;
-			}
-			
-			swap(Heap[parentIndex], Heap[minChildIndex]);
-			parentIndex = minChildIndex;
-		}
+		return hashKey;
 	}
 	
 private:
-	vector<int> Heap;
-	int Capacity = 10;
-	int CurrentIndex = 0;
-};
-
-class CBJSolution
-{
-public:
-	CBJSolution() {}
-	virtual ~CBJSolution() {}
-
-public:
-	void PrintSolution(const int& num)
-	{
-		MinHeap.Push(num);
-
-		if (num == 0)
-		{
-			cout << MinHeap.Pop() << "\n";
-		}
-	}
-
-	void PrintSolution(const string& question)
-	{
-		
-	}
-
-private:
-	CBJMinHeap MinHeap;
-	int ZeroCounter = 0;
+	const int HashValue = 100007; 
+	vector<list<int>> HashTable;
 };
 
 int main()
@@ -155,18 +73,31 @@ int main()
 	cin.tie(NULL);
 	cout.tie(NULL);
 
-	CBJSolution solution;
+	CBJHashTable HashTable;
 
-	int questionNum = 0;
-	cin >> questionNum;
+	int n = 0;
+	cin >> n;
 	cin.ignore();
 
-	for (int i = 0; i < questionNum; ++i)
+	for (int i = 0; i < n; ++i)
 	{
-		int question;
-		cin >> question;
-		solution.PrintSolution(question);
+		int num;
+		cin >> num;
+		HashTable.Insert(num);
 	}
+
+	int m = 0;
+	cin >> m;
+	cin.ignore();
+
+	for (int i = 0; i < m; ++i)
+	{
+		int num;
+		cin >> num;
+		cout << HashTable.Find(num) << " ";
+	}
+
+	cout << "\n";
 
 	return 0;
 }
