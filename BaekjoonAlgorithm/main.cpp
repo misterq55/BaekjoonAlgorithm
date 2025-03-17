@@ -1,70 +1,52 @@
 ﻿#include <iostream>
 #include <string>
 #include <vector>
-#include <list>
+#include <sstream>
 #include <cstdlib>
+#include <map>
+#include <set>
 using namespace std;
 
-class CBJHashTable
+class CBJSolution
 {
 public:
-	CBJHashTable()
-	{
-		HashTable.resize(HashValue);	
-	}
-	
-	~CBJHashTable() {}
+	CBJSolution() {}
+	~CBJSolution() {}
 
 public:
-	void Insert(int value)
+	void EnterData(const string& data)
 	{
-		const int hashKey = GetHashKey(value);
-
-		list<int>& foundList = HashTable[hashKey];
-
-		for (const int& foundValue : foundList)
-		{
-			if (foundValue == value)
-			{
-				return;
-			}
-		}
-		
-		foundList.push_back(value);
+		Data0.emplace(data, Index);
+		Data1.emplace(Index++, data);
 	}
 
-	int Find(int value)
+	string FindData(const string& data)
 	{
-		const int hashKey = GetHashKey(value);
-
-		list<int>& foundList = HashTable[hashKey];
-
-		for (const int& foundValue : foundList)
+		if (isNumber(data))
 		{
-			if (foundValue == value)
-			{
-				return 1;
-			}
+			return Data1[stoi(data)];
 		}
-		
-		return 0;
+		else
+		{
+			return to_string(Data0[data]);
+		}
 	}
 
 private:
-	int GetHashKey(int value)
+	bool isNumber(const string& data)
 	{
-		int hashKey = value % HashValue;
-		if (hashKey < 0)
+		if (data.empty())
 		{
-			hashKey *= -1;
+			return false;
 		}
 
-		return hashKey;
+		return isdigit(data[0]);
 	}
 	
 private:
-	const int HashValue = 100007; 
-	vector<list<int>> HashTable;
+	map<string, int> Data0;
+	map<int, string> Data1;
+	int Index = 1;
 };
 
 int main()
@@ -73,31 +55,26 @@ int main()
 	cin.tie(NULL);
 	cout.tie(NULL);
 
-	CBJHashTable HashTable;
-
-	int n = 0;
+	CBJSolution solution;
+	
+	unsigned int n = 0, m = 0;
 	cin >> n;
-	cin.ignore();
-
-	for (int i = 0; i < n; ++i)
-	{
-		int num;
-		cin >> num;
-		HashTable.Insert(num);
-	}
-
-	int m = 0;
 	cin >> m;
 	cin.ignore();
 
-	for (int i = 0; i < m; ++i)
+	for (unsigned int i = 0; i < n; ++i)
 	{
-		int num;
-		cin >> num;
-		cout << HashTable.Find(num) << " ";
+		string data;
+		getline(cin, data);
+		solution.EnterData(data);
 	}
 
-	cout << "\n";
+	for (unsigned int i = 0; i < m; ++i)
+	{
+		string question;
+		getline(cin, question);
+		cout << solution.FindData(question) << "\n";
+	}
 
 	return 0;
 }
