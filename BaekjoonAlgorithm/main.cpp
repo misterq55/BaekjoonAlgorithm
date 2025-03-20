@@ -1,5 +1,4 @@
 ﻿#include <iostream>
-#include <unordered_map>
 #include <vector>
 using namespace std;
 
@@ -9,12 +8,12 @@ int main()
 	cin.tie(NULL);
 	cout.tie(NULL);
 
-	int n = 0, k = 0, start = 0, end = 0;
+	int n = 0, m = 0, start = 0, end = 0;
 
 	cin >> n;
 	vector<int> nums(n);
 	
-	cin >> k;
+	cin >> m;
 	
 	for (int i = 0; i < n; ++i)
 	{
@@ -23,22 +22,24 @@ int main()
 
 	int answer = 0;
 
-	unordered_map<int, int> duplicatedCount;
-	
+	int sum = 0;
+
 	while (end < n)
 	{
-		int count = ++duplicatedCount[nums[end]];
-
-		while (count > k)
+		sum += nums[end];
+		
+		while (sum > m)
 		{
-			--duplicatedCount[nums[start]];
+			sum -= nums[start];
 			start++;
-			count = duplicatedCount[nums[end]];
 		}
 		
 		end++;
 
-		answer = max(answer, end - start);
+		if (sum == m)
+		{
+			answer++;
+		}
 	}
 
 	cout << answer << "\n";
