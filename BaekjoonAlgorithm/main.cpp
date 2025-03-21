@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿#include <algorithm>
+#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -8,41 +9,45 @@ int main()
 	cin.tie(NULL);
 	cout.tie(NULL);
 
-	int n = 0, m = 0, start = 0, end = 0;
+	int n = 0;
 
 	cin >> n;
 	vector<int> nums(n);
-	
-	cin >> m;
 	
 	for (int i = 0; i < n; ++i)
 	{
 		cin >> nums[i];
 	}
 
-	int answer = 0;
-
-	int sum = 0;
-
-	while (end < n)
+	sort(nums.begin(), nums.end());
+	
+	int left = 0, right = n - 1;
+	int answerLeft = left, answerRight = right;
+	int minValue = 2000000000;
+	
+	while (left < right)
 	{
-		sum += nums[end];
-		
-		while (sum > m)
-		{
-			sum -= nums[start];
-			start++;
-		}
-		
-		end++;
+		int sum = nums[left] + nums[right];
+		int value = abs(sum);
 
-		if (sum == m)
+		if (value <= minValue)
 		{
-			answer++;
+			minValue = value;
+			answerLeft = left;
+			answerRight = right;	
+		}
+
+		if (sum > 0)
+		{
+			right--;
+		}
+		else
+		{
+			left++;
 		}
 	}
 
-	cout << answer << "\n";
+	cout << nums[answerLeft] << " " << nums[answerRight] << "\n";
 
 	return 0;
 }
