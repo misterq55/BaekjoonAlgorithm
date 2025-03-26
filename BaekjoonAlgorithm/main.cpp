@@ -3,103 +3,62 @@
 #include <vector>
 using namespace std;
 
-bool zeroCheck(const int& m, const int& n, const vector<vector<int>>& tomatoField)
-{
-    bool isZero = true;
-    for (int i = 1; i < m + 1; ++i)
-    {
-        for (int j = 1; j < n + 1; ++j)
-        {
-            if (tomatoField[i][j] == 0)
-            {
-                isZero = false;
-                break;
-            }
-        }
-    }
-
-    return isZero;
-}
-
 int main()
 {
     ios::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n = 0, m = 0;
-
-    cin >> n >> m;
-    cin.ignore();
-
-    vector<vector<int>> tomatoField(m + 2, vector<int>(n + 2, -1));
-    vector<vector<int>> maxDay(m + 2, vector<int>(n + 2, -1));
-        
-    for (int i = 1; i < m + 1; ++i)
-    {
-        for (int j = 1; j < n + 1; ++j)
-        {
-            cin >> tomatoField[i][j];
-        }
-    }
-
-    if (zeroCheck(m, n, tomatoField))
-    {
-        cout << 0 << "\n";
-        return 0;
-    }
-
-    vector<pair<int, int>> direction = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-    queue<pair<int, int>> queue;
-
-    for (int i = 1; i < m + 1; ++i)
-    {
-        for (int j = 1; j < n + 1; ++j)
-        {
-            if (tomatoField[i][j] == 1)
-            {
-                queue.push({i, j});
-                maxDay[i][j] = 0;
-            }
-        }
-    }
+    int n = 0, m = 0, start = 0;
     
-    while (!queue.empty())
+    cin >> n >> m >> start;
+
+    const int INF = 2147483647;
+    vector<vector<pair<int, int>>> graph(n + 1);
+    vector<int> distances(n + 1, INF);
+    
+    for (int i = 0; i < m; ++i)
     {
-        pair<int, int> currentPos = queue.front();
-        queue.pop();
-        
-        for (const auto &dir : direction)
+        int u, v, w;
+        cin >> u >> v >> w;
+        graph[u].emplace_back(make_pair(w, v));
+    }
+
+    distances[start] = 0;
+
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+
+    pq.push({0,start});
+    
+    while (!pq.empty())
+    {
+        int u = pq.top().second;
+        pq.pop();
+
+        for (const auto& pair : graph[u])
         {
-            int i = currentPos.first + dir.first;
-            int j = currentPos.second + dir.second;
+            int v = pair.second;
+            int w = pair.first;
 
-            if (tomatoField[i][j] == 0)
+            if (distances[v] > distances[u] + w)
             {
-                queue.push({i, j});
-                tomatoField[i][j] = 1;
-
-                maxDay[i][j] = maxDay[currentPos.first][currentPos.second] + 1;
+                distances[v] = distances[u] + w;
+                pq.push({distances[v], v});
             }
         }
     }
 
-    if (!zeroCheck(m, n, tomatoField))
+    for (int i = 1; i <= n; ++i)
     {
-        cout << -1 << "\n";
-        return 0;
-    }
-
-    int answer = -1;
-    for (int i = 1; i < m + 1; ++i)
-    {
-        for (int j = 1; j < n + 1; ++j)
+        if (distances[i] == INF)
         {
-            answer = max(maxDay[i][j] , answer);
+            cout << "INF" << "\n";
+        }
+        else
+        {
+            cout << distances[i] << "\n";    
         }
     }
-
-    cout << answer << "\n";
     
     return 0;
 }
