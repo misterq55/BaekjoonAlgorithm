@@ -9,56 +9,52 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n = 0, m = 0, start = 0;
-    
-    cin >> n >> m >> start;
-
+    int n = 0, m = 0, start = 0, end = 0;
     const int INF = 2147483647;
+    
+    cin >> n >> m;
+
     vector<vector<pair<int, int>>> graph(n + 1);
-    vector<int> distances(n + 1, INF);
+    vector<int> distance(n + 1, INF);
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;
     
     for (int i = 0; i < m; ++i)
     {
         int u, v, w;
         cin >> u >> v >> w;
-        graph[u].emplace_back(make_pair(w, v));
+        graph[u].push_back(make_pair(w, v));
     }
 
-    distances[start] = 0;
+    cin >> start >> end;
 
-    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+    distance[start] = 0;
+    pq.push(make_pair(0, start));
 
-    pq.push({0,start});
-    
     while (!pq.empty())
     {
+        int cost = pq.top().first;
         int u = pq.top().second;
+
         pq.pop();
 
-        for (const auto& pair : graph[u])
+        if (distance[u] < cost)
         {
-            int v = pair.second;
+            continue;
+        }
+        
+        for (auto& pair : graph[u])
+        {
             int w = pair.first;
-
-            if (distances[v] > distances[u] + w)
+            int v = pair.second;
+            if (distance[v] > distance[u] + w)
             {
-                distances[v] = distances[u] + w;
-                pq.push({distances[v], v});
+                distance[v] = distance[u] + w;
+                pq.push(make_pair(distance[v], v));
             }
         }
     }
 
-    for (int i = 1; i <= n; ++i)
-    {
-        if (distances[i] == INF)
-        {
-            cout << "INF" << "\n";
-        }
-        else
-        {
-            cout << distances[i] << "\n";    
-        }
-    }
+    cout << distance[end] << "\n";
     
     return 0;
 }
