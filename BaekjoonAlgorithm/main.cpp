@@ -3,73 +3,74 @@
 #include <vector>
 using namespace std;
 
-const int INF = 2147483647;
-
-int Dijkstra(const vector<vector<pair<int, int>>>& graph,const int n, const int start, const int end)
-{
-    vector<int> dist(n + 1, INF);
-    dist[start] = 0;
-    priority_queue<pair<int, int>, vector<pair<int,int>>, greater<>> pq;
-
-    pq.push(make_pair(0, start));
-    while (!pq.empty())
-    {
-        const int cost = pq.top().first;
-        const int u = pq.top().second;
-        pq.pop();
-
-        if (dist[u] < cost) continue;
-
-        for (const auto &pair : graph[u])
-        {
-            const int w = pair.first;
-            const int v = pair.second;
-
-            if (dist[v] > dist[u] + w)
-            {
-                dist[v] = dist[u] + w;
-                pq.push(make_pair(dist[v], v));
-            }
-        }
-    }
-
-    return dist[end];
-}
-
-int CheckInfinity(const int startValue, const int centerValue, const int endValue)
-{
-    return (startValue == INF || centerValue == INF || endValue == INF) ? INF : startValue + centerValue + endValue;
-}
-
 int main()
 {
     ios::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n = 0, m = 0, v1 = 0, v2 = 0;
-    
+    int n = 0, m = 0;
     
     cin >> n >> m;
 
-    vector<vector<pair<int, int>>> graph(n + 1, vector<pair<int, int>>());
-    
-    for (int i = 0; i < m; ++i)
+    vector<vector<int>> snail(n + 2, vector<int>(n + 2, -1));
+    for (int i = 1; i <= n; ++i)
     {
-        int u, v, w;
-        cin >> u >> v >> w;
-        graph[u].emplace_back(w, v);
-        graph[v].emplace_back(w, u);
+        for (int j = 1; j <= n; ++j)
+        {
+            snail[i][j] = 0;
+        }
     }
 
-    cin >> v1 >> v2;
+    vector<pair<int, int>> direction = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+    int currentDirectionIndex = 0;
 
-    int value1 = CheckInfinity(Dijkstra(graph, n, 1, v1), Dijkstra(graph, n, v1, v2), Dijkstra(graph, n, v2, n));
-    int value2 = CheckInfinity(Dijkstra(graph, n, 1, v2), Dijkstra(graph, n, v2, v1), Dijkstra(graph, n, v1, n));
+    int numValue = n * n;
+    int y = 1, x = 1, answerY = 0, answerX = 0;
 
-    int ans = value1 == INF ? -1 : min(value1, value2);
-    
-    cout << ans << "\n";
+    while (numValue > 0)
+    {
+        if (numValue == m)
+        {
+            answerY = y;
+            answerX = x;
+        }
+        
+        snail[y][x] = numValue;
+
+        pair<int, int> currentDirection = direction[currentDirectionIndex];
+        if (snail[y + currentDirection.first][x + currentDirection.second] == 0)
+        {
+            y += currentDirection.first;
+            x += currentDirection.second;
+        }
+        else
+        {
+            currentDirectionIndex++;
+            if (currentDirectionIndex == static_cast<int>(direction.size()))
+            {
+                currentDirectionIndex = 0;
+            }
+
+            pair<int, int> newDirection = direction[currentDirectionIndex];
+            y += newDirection.first;
+            x += newDirection.second;
+        }
+        
+        numValue--;
+    }
+
+    for (int i = 1; i < n + 1; ++i)
+    {
+        for (int j = 1; j < n + 1; ++j)
+        {
+            cout << snail[i][j] << " ";
+        }
+        
+        cout << "\n";
+    }
+
+    cout << answerY << " " << answerX << "\n";
     
     return 0;
 }
