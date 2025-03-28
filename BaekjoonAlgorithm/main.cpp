@@ -9,56 +9,64 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n = 0, m = 0;
-    
-    cin >> n >> m;
+    int t = 0;
 
-    vector<pair<int, vector<int>>> graphs(n + 1, pair<int, vector<int>>());
-    vector<int> result;
-    
-    for (int i = 0; i < m; ++i)
-    {
-        int u, v;
-        cin >> u >> v;
-        graphs[u].second.push_back(v);
-        graphs[v].first++;
-    }
+    cin >> t;
 
-    queue<int> q;
-    
-    for (int i = 1; i <= n; ++i)
+    for (int i = 0; i < t; ++i)
     {
-        const pair<int, vector<int>>& graph = graphs[i];
-        if (graph.first == 0)
+        int n = 0, k = 0;
+        cin >> n >> k;
+
+        vector<int> delay(n + 1);
+        for (int j = 1; j <= n; ++j)
         {
-            q.push(i);
+            cin >> delay[j];
         }
-    }
-
-    while (!q.empty())
-    {
-        const int current = q.front();
-        result.emplace_back(current);
-        q.pop();
-
-        for (const int next : graphs[current].second)
+        
+        vector<pair<int, vector<int>>> graph(n + 1);
+        for (int j = 1; j <= k; ++j)
         {
-            pair<int, vector<int>>& nextGraph = graphs[next];
-            nextGraph.first--;
+            int x = 0, y = 0;
+            cin >> x >> y;
+            graph[x].second.push_back(y);
+            graph[y].first++;
+        }
 
-            if (nextGraph.first == 0)
+        int w = 0;
+        cin >> w;
+
+        vector<int> constructTime(n + 1, 0);
+        queue<int> q;
+
+        for (int j = 1; j <= n; ++j)
+        {
+            if (graph[j].first == 0)
             {
-                q.push(next);
+                q.push(j);
+                constructTime[j] = delay[j];
             }
         }
-    }
 
-    for (const int next : result)
-    {
-        cout << next << " ";
+        while (!q.empty())
+        {
+            int current = q.front();
+            q.pop();
+
+            for (const int& num : graph[current].second)
+            {
+                constructTime[num] = max(constructTime[num], delay[num] + constructTime[current]);
+                
+                graph[num].first--;
+                if (graph[num].first == 0)
+                {
+                    q.push(num);
+                }
+            }
+        }
+
+        cout << constructTime[w] << "\n";
     }
-    
-    cout << "\n";
     
     return 0;
 }
