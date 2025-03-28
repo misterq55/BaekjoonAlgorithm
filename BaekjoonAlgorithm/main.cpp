@@ -13,64 +13,52 @@ int main()
     
     cin >> n >> m;
 
-    vector<vector<int>> snail(n + 2, vector<int>(n + 2, -1));
+    vector<pair<int, vector<int>>> graphs(n + 1, pair<int, vector<int>>());
+    vector<int> result;
+    
+    for (int i = 0; i < m; ++i)
+    {
+        int u, v;
+        cin >> u >> v;
+        graphs[u].second.push_back(v);
+        graphs[v].first++;
+    }
+
+    queue<int> q;
+    
     for (int i = 1; i <= n; ++i)
     {
-        for (int j = 1; j <= n; ++j)
+        const pair<int, vector<int>>& graph = graphs[i];
+        if (graph.first == 0)
         {
-            snail[i][j] = 0;
+            q.push(i);
         }
     }
 
-    vector<pair<int, int>> direction = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
-    int currentDirectionIndex = 0;
-
-    int numValue = n * n;
-    int y = 1, x = 1, answerY = 0, answerX = 0;
-
-    while (numValue > 0)
+    while (!q.empty())
     {
-        if (numValue == m)
-        {
-            answerY = y;
-            answerX = x;
-        }
-        
-        snail[y][x] = numValue;
+        const int current = q.front();
+        result.emplace_back(current);
+        q.pop();
 
-        pair<int, int> currentDirection = direction[currentDirectionIndex];
-        if (snail[y + currentDirection.first][x + currentDirection.second] == 0)
+        for (const int next : graphs[current].second)
         {
-            y += currentDirection.first;
-            x += currentDirection.second;
-        }
-        else
-        {
-            currentDirectionIndex++;
-            if (currentDirectionIndex == static_cast<int>(direction.size()))
+            pair<int, vector<int>>& nextGraph = graphs[next];
+            nextGraph.first--;
+
+            if (nextGraph.first == 0)
             {
-                currentDirectionIndex = 0;
+                q.push(next);
             }
-
-            pair<int, int> newDirection = direction[currentDirectionIndex];
-            y += newDirection.first;
-            x += newDirection.second;
         }
-        
-        numValue--;
     }
 
-    for (int i = 1; i < n + 1; ++i)
+    for (const int next : result)
     {
-        for (int j = 1; j < n + 1; ++j)
-        {
-            cout << snail[i][j] << " ";
-        }
-        
-        cout << "\n";
+        cout << next << " ";
     }
-
-    cout << answerY << " " << answerX << "\n";
+    
+    cout << "\n";
     
     return 0;
 }
