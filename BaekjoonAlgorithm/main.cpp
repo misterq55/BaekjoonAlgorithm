@@ -1,7 +1,36 @@
-﻿#include <iostream>
-#include <queue>
+﻿#include <algorithm>
+#include <iostream>
 #include <vector>
 using namespace std;
+
+void Merge(vector<int>& nums, int left, int mid, int right)
+{
+    vector<int> leftBuffer(nums.begin() + left, nums.begin() + mid);
+    vector<int> rightBuffer(nums.begin() + mid, nums.begin() + right);
+
+    int i = 0, j = 0, k = left;
+    while (i < leftBuffer.size() && j < rightBuffer.size())
+    {
+        if (leftBuffer[i] <= rightBuffer[j])
+        {
+            nums[k++] = leftBuffer[i++];
+        }
+        else
+        {
+            nums[k++] = rightBuffer[j++];
+        }
+    }
+
+    while (i < leftBuffer.size())
+    {
+        nums[k++] = leftBuffer[i++];
+    }
+
+    while (j < rightBuffer.size())
+    {
+        nums[k++] = rightBuffer[j++];
+    }
+}
 
 int main()
 {
@@ -9,63 +38,36 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int t = 0;
+    int n = 0;
 
-    cin >> t;
+    cin >> n;
 
-    for (int i = 0; i < t; ++i)
+    vector<int> nums(n);
+
+    for (int i = 0; i < n; ++i)
     {
-        int n = 0, k = 0;
-        cin >> n >> k;
+        cin >> nums[i];
+    }
 
-        vector<int> delay(n + 1);
-        for (int j = 1; j <= n; ++j)
+    int mergeSize = 1;
+
+    while (mergeSize < n)
+    {
+        for (int i = 0; i < n; i += mergeSize * 2)
         {
-            cin >> delay[j];
-        }
-        
-        vector<pair<int, vector<int>>> graph(n + 1);
-        for (int j = 1; j <= k; ++j)
-        {
-            int x = 0, y = 0;
-            cin >> x >> y;
-            graph[x].second.push_back(y);
-            graph[y].first++;
+            int left = i;
+            int right = min(i + mergeSize * 2, n);
+            int mid = min(i + mergeSize, n);
+
+            Merge(nums, left, mid, right);
         }
 
-        int w = 0;
-        cin >> w;
+        mergeSize *= 2;
+    }
 
-        vector<int> constructTime(n + 1, 0);
-        queue<int> q;
-
-        for (int j = 1; j <= n; ++j)
-        {
-            if (graph[j].first == 0)
-            {
-                q.push(j);
-                constructTime[j] = delay[j];
-            }
-        }
-
-        while (!q.empty())
-        {
-            int current = q.front();
-            q.pop();
-
-            for (const int& num : graph[current].second)
-            {
-                constructTime[num] = max(constructTime[num], delay[num] + constructTime[current]);
-                
-                graph[num].first--;
-                if (graph[num].first == 0)
-                {
-                    q.push(num);
-                }
-            }
-        }
-
-        cout << constructTime[w] << "\n";
+    for (int i = 0; i < n; ++i)
+    {
+        cout << nums[i] << "\n";
     }
     
     return 0;

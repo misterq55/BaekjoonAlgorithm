@@ -115,8 +115,8 @@ void CBJSort::mergesort_nonrecursive(std::vector<int>& nums)
         for (size_t i = 0; i < nums.size(); i += mergeSize * 2)
         {
             const int left = i;
-            const int mid = std::min(i + mergeSize - 1, nums.size() - 1);
-            const int right = std::min(i + mergeSize * 2 - 1, nums.size() - 1);
+            const int mid = std::min(i + mergeSize, nums.size());
+            const int right = std::min(i + mergeSize * 2, nums.size());
             merge(nums, left, mid, right);
         }
 
@@ -142,8 +142,8 @@ void CBJSort::merge(std::vector<int>& nums, const int left, const int mid, const
 {
     int i = 0, j = 0, k = left;
 
-    std::vector<int> leftNums = std::vector<int>(nums.begin() + left, nums.begin() + mid + 1);
-    std::vector<int> rightNums = std::vector<int>(nums.begin() + mid + 1, nums.begin() + right + 1);
+    std::vector<int> leftNums = std::vector<int>(nums.begin() + left, nums.begin() + mid);
+    std::vector<int> rightNums = std::vector<int>(nums.begin() + mid, nums.begin() + right);
 
     while (i < leftNums.size() && j < rightNums.size())
     {
