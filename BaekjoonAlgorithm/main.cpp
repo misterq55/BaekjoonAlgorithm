@@ -1,36 +1,6 @@
-﻿#include <algorithm>
-#include <iostream>
+﻿#include <iostream>
 #include <vector>
 using namespace std;
-
-void Merge(vector<int>& nums, int left, int mid, int right)
-{
-    vector<int> leftBuffer(nums.begin() + left, nums.begin() + mid);
-    vector<int> rightBuffer(nums.begin() + mid, nums.begin() + right);
-
-    int i = 0, j = 0, k = left;
-    while (i < leftBuffer.size() && j < rightBuffer.size())
-    {
-        if (leftBuffer[i] <= rightBuffer[j])
-        {
-            nums[k++] = leftBuffer[i++];
-        }
-        else
-        {
-            nums[k++] = rightBuffer[j++];
-        }
-    }
-
-    while (i < leftBuffer.size())
-    {
-        nums[k++] = leftBuffer[i++];
-    }
-
-    while (j < rightBuffer.size())
-    {
-        nums[k++] = rightBuffer[j++];
-    }
-}
 
 int main()
 {
@@ -38,36 +8,33 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n = 0;
+    int t = 0;
 
-    cin >> n;
+    cin >> t;
 
-    vector<int> nums(n);
+    vector<int> nums(t);
 
-    for (int i = 0; i < n; ++i)
+    int maxNum = 0;
+    
+    for (int i = 0; i < t; ++i)
     {
         cin >> nums[i];
+        maxNum = max(maxNum, nums[i]);
     }
 
-    int mergeSize = 1;
+    vector<long long> dp(maxNum + 1, 0);
+    dp[1] = 1;
+    dp[2] = 2;
+    dp[3] = 4;
 
-    while (mergeSize < n)
+    for (int i = 4; i < maxNum + 1; ++i)
     {
-        for (int i = 0; i < n; i += mergeSize * 2)
-        {
-            int left = i;
-            int right = min(i + mergeSize * 2, n);
-            int mid = min(i + mergeSize, n);
-
-            Merge(nums, left, mid, right);
-        }
-
-        mergeSize *= 2;
+        dp[i] = (dp[i - 3] + dp[i - 2] + dp[i - 1]) % 1000000009;
     }
 
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < t; ++i)
     {
-        cout << nums[i] << "\n";
+        cout << dp[nums[i]] << "\n";
     }
     
     return 0;
