@@ -8,34 +8,28 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int t = 0;
+    int n, k;
+    cin >> n >> k;
 
-    cin >> t;
+    vector<int> dp(100001, 0);
 
-    vector<int> nums(t);
-
-    int maxNum = 0;
-    
-    for (int i = 0; i < t; ++i)
+    for (int i = 0; i < n; ++i)
     {
-        cin >> nums[i];
-        maxNum = max(maxNum, nums[i]);
+        int w, v;
+        cin >> w >> v;
+
+        dp[w] = max(dp[w], v);
     }
 
-    vector<long long> dp(maxNum + 1, 0);
-    dp[1] = 1;
-    dp[2] = 2;
-    dp[3] = 4;
-
-    for (int i = 4; i < maxNum + 1; ++i)
+    for (int i = 0; i < k; ++i)
     {
-        dp[i] = (dp[i - 3] + dp[i - 2] + dp[i - 1]) % 1000000009;
+        if (dp[i] != 0)
+        {
+            
+        }
     }
 
-    for (int i = 0; i < t; ++i)
-    {
-        cout << dp[nums[i]] << "\n";
-    }
+    cout << dp[k] << "\n";
     
     return 0;
 }
