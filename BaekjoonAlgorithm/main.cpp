@@ -8,30 +8,28 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, k;
-    cin >> n >> k;
+    int n;
+    cin >> n;
 
-    vector<int> dp(100001, 0);
-
-    for (int i = 0; i < n; ++i)
+    vector<int> cards(n + 1);
+    vector<int> dp(n + 1);
+    
+    for (int i = 1; i <= n; i++)
     {
-        int w, v;
-        cin >> w >> v;
-
-        dp[w] = max(dp[w], v);
+        cin >> cards[i];
     }
 
-    int maxNum = 0;
-    
-    for (int i = 0; i < k; ++i)
+    dp[1] = cards[1];
+
+    for (int i = 2; i <= n; ++i)
     {
-        if (dp[i] != 0)
+        for (int j = 1; j <= i; ++j)
         {
-            
+            dp[i] = max(dp[i], cards[j] + dp[i - j]);
         }
     }
-
-    cout << dp[maxNum] << "\n";
+    
+    cout << dp[n] << '\n';
     
     return 0;
 }
