@@ -21,6 +21,8 @@ int main()
         dp[w] = max(dp[w], v);
     }
 
+    int maxNum = 0;
+    
     for (int i = 0; i < k; ++i)
     {
         if (dp[i] != 0)
@@ -29,7 +31,7 @@ int main()
         }
     }
 
-    cout << dp[k] << "\n";
+    cout << dp[maxNum] << "\n";
     
     return 0;
 }
