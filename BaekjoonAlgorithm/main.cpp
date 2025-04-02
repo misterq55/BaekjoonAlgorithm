@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <string>
 #include <vector>
 using namespace std;
 
@@ -11,25 +12,32 @@ int main()
     int n;
     cin >> n;
 
-    vector<int> cards(n + 1);
-    vector<int> dp(n + 1);
-    
-    for (int i = 1; i <= n; i++)
+    vector<int> nums(n);
+    vector<int> dp(n + 1, 1);
+
+    for (int i = 0; i < n; ++i)
     {
-        cin >> cards[i];
+        cin >> nums[i];
     }
 
-    dp[1] = cards[1];
-
-    for (int i = 2; i <= n; ++i)
+    for (int i = 1; i <= n; ++i)
     {
         for (int j = 1; j <= i; ++j)
         {
-            dp[i] = max(dp[i], cards[j] + dp[i - j]);
+            if (nums[j - 1] < nums[i - 1])
+            {
+                dp[i] = max(dp[i], dp[j] + 1);
+            }
         }
     }
-    
-    cout << dp[n] << '\n';
+
+    int masLength = 0;
+    for (int i = 1; i <= n; ++i)
+    {
+        masLength = max(masLength, dp[i]);
+    }
+
+    cout << masLength << "\n";
     
     return 0;
 }
