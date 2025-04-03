@@ -1,5 +1,4 @@
 ﻿#include <iostream>
-#include <string>
 #include <vector>
 using namespace std;
 
@@ -9,35 +8,29 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n;
-    cin >> n;
+    int n, k;
+    cin >> n >> k;
 
-    vector<int> nums(n);
-    vector<int> dp(n + 1, 1);
-
+    vector<int> coins(n);
     for (int i = 0; i < n; ++i)
     {
-        cin >> nums[i];
+        cin >> coins[i];
     }
 
-    for (int i = 1; i <= n; ++i)
+    vector<int> dp(k + 1, 0);
+    dp[0] = 1;
+
+    for (int i = 0; i < n; i++)
     {
-        for (int j = 1; j <= i; ++j)
+        int coin = coins[i];
+        
+        for (int j = coin; j <= k; j++)
         {
-            if (nums[j - 1] < nums[i - 1])
-            {
-                dp[i] = max(dp[i], dp[j] + 1);
-            }
+            dp[j] += dp[j - coin];
         }
     }
 
-    int masLength = 0;
-    for (int i = 1; i <= n; ++i)
-    {
-        masLength = max(masLength, dp[i]);
-    }
-
-    cout << masLength << "\n";
+    cout << dp[k] << "\n";
     
     return 0;
 }
