@@ -1,8 +1,27 @@
 ﻿#include <iostream>
-#include <queue>
-#include <algorithm>
 #include <vector>
 using namespace std;
+
+int Find(vector<int>& parent, int value)
+{
+    if (parent[value] != value)
+    {
+        parent[value] = Find(parent, parent[value]);
+    }
+
+    return parent[value];
+}
+
+void Union(vector<int>& parent, int x, int y)
+{
+    x = Find(parent, x);
+    y = Find(parent, y);
+
+    if (x != y)
+    {
+        parent[x] = y;
+    }    
+}
 
 int main()
 {
@@ -10,38 +29,34 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n;
-    cin >> n;
+    int n, m;
+    cin >> n >> m;
 
-    vector<pair<int, int>> lectures(n);
-    for (int i = 0; i < n; ++i)
+    vector<int> parent(n + 1);
+    for (int i = 1; i <= n; ++i)
     {
-        int temp;
-        cin >> temp;
-        cin >> lectures[i].second;
-        cin >> lectures[i].first;
+        parent[i] = i;
     }
-
-    sort(lectures.begin(), lectures.end(), [](pair<int, int> a, pair<int, int> b)
-    {
-        return a.second < b.second;
-    });
-
-    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;
-    pq.push(lectures[0]);
     
-    for (int i = 1; i < n; ++i)
+    for (int i = 0; i < m; ++i)
     {
-        pair<int, int> current = pq.top();
-        if (current.first <= lectures[i].second)
-        {
-            pq.pop();
-        }
-
-        pq.push(lectures[i]);
+        int x, y;
+        cin >> x >> y;
+        Union(parent, x, y);
     }
 
-    cout << pq.size() << "\n";
+    int root = Find(parent, 1);
+
+    int count = 0;
+    for (int i = 2; i <= n; ++i)
+    {
+        if (Find(parent, i) == root)
+        {
+            ++count;
+        }
+    }
+
+    cout << count << "\n";
     
     return 0;
 }
