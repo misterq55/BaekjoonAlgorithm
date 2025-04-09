@@ -1,27 +1,9 @@
-﻿#include <iostream>
+﻿#include <algorithm>
+#include <iostream>
+#include <queue>
 #include <vector>
 using namespace std;
 
-int Find(vector<int>& parent, int value)
-{
-    if (parent[value] != value)
-    {
-        parent[value] = Find(parent, parent[value]);
-    }
-
-    return parent[value];
-}
-
-void Union(vector<int>& parent, int x, int y)
-{
-    x = Find(parent, x);
-    y = Find(parent, y);
-
-    if (x != y)
-    {
-        parent[x] = y;
-    }    
-}
 
 int main()
 {
@@ -32,31 +14,55 @@ int main()
     int n, m;
     cin >> n >> m;
 
-    vector<int> parent(n + 1);
-    for (int i = 1; i <= n; ++i)
-    {
-        parent[i] = i;
-    }
+    vector<bool> visited(n + 1, false);
     
-    for (int i = 0; i < m; ++i)
+    vector<vector<pair<int, int>>> nodes(n + 1);
+    for (int i = 1; i <= m; ++i)
     {
-        int x, y;
-        cin >> x >> y;
-        Union(parent, x, y);
+        int a, b, c;
+        cin >> a >> b >> c;
+        nodes[a].push_back(make_pair(c, b));
+        nodes[b].push_back(make_pair(c, a));
     }
 
-    int root = Find(parent, 1);
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;
 
-    int count = 0;
-    for (int i = 2; i <= n; ++i)
+    for (const auto& edge : nodes[1])
     {
-        if (Find(parent, i) == root)
+        pq.push(edge);
+    }
+
+    visited[1] = true;
+    
+    int count = 0;
+    int weight = 0;
+
+    while (!pq.empty())
+    {
+        pair<int, int> current = pq.top();
+        pq.pop();
+
+        if (visited[current.second])
         {
-            ++count;
+            continue;
+        }
+
+        weight += current.first;
+        visited[current.second] = true;
+        count++;
+
+        if (count == n - 1)
+        {
+            break;
+        }
+
+        for (const auto& edge : nodes[current.second])
+        {
+            pq.push(edge);
         }
     }
 
-    cout << count << "\n";
+    cout << weight << "\n";
     
     return 0;
 }
