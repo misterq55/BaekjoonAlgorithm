@@ -1,9 +1,6 @@
-﻿#include <algorithm>
-#include <iostream>
-#include <queue>
+﻿#include <iostream>
 #include <vector>
 using namespace std;
-
 
 int main()
 {
@@ -11,58 +8,62 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m;
-    cin >> n >> m;
+    int n, m, k;
+    cin >> n >> m >> k;
 
-    vector<bool> visited(n + 1, false);
-    
-    vector<vector<pair<int, int>>> nodes(n + 1);
-    for (int i = 1; i <= m; ++i)
+    vector<vector<int>> boardStartWithWhite(n + 1, vector<int>(m + 1, 0));
+    vector<vector<int>> boardStartWithBlack(n + 1, vector<int>(m + 1, 0));
+
+    for (int i = 1; i <= n; ++i)
     {
-        int a, b, c;
-        cin >> a >> b >> c;
-        nodes[a].push_back(make_pair(c, b));
-        nodes[b].push_back(make_pair(c, a));
-    }
-
-    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;
-
-    for (const auto& edge : nodes[1])
-    {
-        pq.push(edge);
-    }
-
-    visited[1] = true;
-    
-    int count = 0;
-    int weight = 0;
-
-    while (!pq.empty())
-    {
-        pair<int, int> current = pq.top();
-        pq.pop();
-
-        if (visited[current.second])
+        string s;
+        cin >> s;
+        
+        for (int j = 1; j <= m; ++j)
         {
-            continue;
-        }
-
-        weight += current.first;
-        visited[current.second] = true;
-        count++;
-
-        if (count == n - 1)
-        {
-            break;
-        }
-
-        for (const auto& edge : nodes[current.second])
-        {
-            pq.push(edge);
+            boardStartWithWhite[i][j] = boardStartWithWhite[i - 1][j] + boardStartWithWhite[i][j - 1] - boardStartWithWhite[i - 1][j - 1];
+            boardStartWithBlack[i][j] = boardStartWithBlack[i - 1][j] + boardStartWithBlack[i][j - 1] - boardStartWithBlack[i - 1][j - 1];
+            
+            if ((i + j) % 2 == 0)
+            {
+                if (s[j - 1] == 'B')
+                {
+                    boardStartWithWhite[i][j] += 1;
+                }
+                else if (s[j - 1] == 'W')
+                {
+                    boardStartWithBlack[i][j] += 1;
+                }    
+            }
+            else
+            {
+                if (s[j - 1] == 'B')
+                {
+                    boardStartWithBlack[i][j] += 1;
+                }
+                else if (s[j - 1] == 'W')
+                {
+                    boardStartWithWhite[i][j] += 1;
+                }
+            }
         }
     }
 
-    cout << weight << "\n";
-    
+    int minValue = 2147483647;
+    for (int i = k; i <= n; ++i)
+    {
+        for (int j = k; j <= m; ++j)
+        {
+            const int y = i - k;
+            const int x = j - k;
+            const int blackMinValue = boardStartWithBlack[i][j] - boardStartWithBlack[y][j] - boardStartWithBlack[i][x] + boardStartWithBlack[y][x];
+            const int whiteMinValue = boardStartWithWhite[i][j] - boardStartWithWhite[y][j] - boardStartWithWhite[i][x] + boardStartWithWhite[y][x];
+            const int tempMinValue = min(blackMinValue, whiteMinValue); 
+            minValue = min(tempMinValue, minValue);
+        }
+    }
+
+    cout << minValue << "\n";
+
     return 0;
 }
