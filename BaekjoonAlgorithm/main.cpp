@@ -1,29 +1,91 @@
 ﻿#include <iostream>
+#include <queue>
 #include <vector>
 using namespace std;
 
-bool dfs(int u, vector<int>& students, vector<bool>& visited, vector<bool>& finished)
+bool checkChunk(const int i, const int j, const char find, const vector<vector<char>>& map, vector<vector<bool>>& visited)
 {
-    visited[u] = true;
-
-    int v = students[u];
-
-    bool result = true;
-    if (!visited[v])
+    if (visited[i][j] || map[i][j] != find)
     {
-        result = dfs(v, students, visited, finished);
+        return false;
     }
-    else
+    
+    vector<pair<int, int>> dirs = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+    queue<pair<int, int>> q;
+    q.push(make_pair(i, j));
+    visited[i][j] = true;
+
+    while (!q.empty())
     {
-        if (!finished[v])
+        pair<int, int> current = q.front();
+        const int y = current.first;
+        const int x = current.second;
+
+        for (const auto& dir : dirs)
         {
-            result = false;
+            const int ny = y + dir.first;
+            const int nx = x + dir.second;
+            if (!visited[ny][nx] && map[ny][nx] == find)
+            {
+                visited[ny][nx] = true;
+                q.push(make_pair(ny, nx));
+            }
+        }
+                
+        q.pop();
+    }
+    
+    return true;
+}
+
+void changeColor(const int i, const int j, const char fromColor, const char toColor, vector<vector<char>>& map)
+{
+    if (map[i][j] != fromColor)
+    {
+        return;
+    }
+    
+    vector<pair<int, int>> dirs = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+    queue<pair<int, int>> q;
+    q.push(make_pair(i, j));
+    map[i][j] = toColor;
+
+    while (!q.empty())
+    {
+        pair<int, int> current = q.front();
+        const int y = current.first;
+        const int x = current.second;
+
+        for (const auto& dir : dirs)
+        {
+            const int ny = y + dir.first;
+            const int nx = x + dir.second;
+            if (map[ny][nx] == fromColor)
+            {
+                map[ny][nx] = toColor;
+                q.push(make_pair(ny, nx));
+            }
+        }
+                
+        q.pop();
+    }
+}
+
+int countChunk(const int n, const vector<vector<char>>& map, vector<vector<bool>>& visited)
+{
+    int count = 0;
+    
+    for (int i = 1; i <= n; ++i)
+    {
+        for (int j = 1; j <= n; ++j)
+        {
+            if (checkChunk(i, j, 'R', map, visited)) ++count;
+            if (checkChunk(i, j, 'B', map, visited)) ++count;
+            if (checkChunk(i, j, 'G', map, visited)) ++count;
         }
     }
 
-    finished[u] = true;
-
-    return result;
+    return count;
 }
 
 int main()
@@ -32,37 +94,39 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int t;
-    cin >> t;
+    int n;
+    cin >> n;
 
-    while (t--)
+    vector<vector<char>> map(n + 2, vector<char>(n + 2, -1));
+    vector<vector<bool>> visited(n + 2, vector<bool>(n + 2, false));
+    
+    for (int i = 1; i <= n; ++i)
     {
-        int n;
-        cin >> n;
-        vector<int> students(n + 1);
-        vector<bool> visited(n + 1, false);
-        vector<bool> finished(n + 1, false);
+        string s;
+        cin >> s;
 
-        for (int i = 1; i <= n; ++i)
+        for (int j = 1; j <= n; ++j)
         {
-            cin >> students[i];
+            map[i][j] = s[j - 1];
         }
-
-        int count = 0;
-        
-        for (int i = 1; i <= n; ++i)
-        {
-            if (!visited[i])
-            {
-                if (dfs(i, students, visited, finished))
-                {
-                    count++;
-                }
-            }
-        }
-        
-        cout << count << "\n";
     }
+
+    int count = countChunk(n, map, visited);
+
+    cout << count << " ";
+
+    for (int i = 1; i <= n; ++i)
+    {
+        for (int j = 1; j <= n; ++j)
+        {
+            changeColor(i, j, 'R', 'G', map);
+            visited[i][j] = false;
+        }
+    }
+
+    count = countChunk(n, map, visited);
+
+    cout << count << "\n";
     
     return 0;
 }
