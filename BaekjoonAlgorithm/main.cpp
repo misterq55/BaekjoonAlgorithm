@@ -2,68 +2,67 @@
 #include <vector>
 using namespace std;
 
+bool dfs(int u, vector<int>& students, vector<bool>& visited, vector<bool>& finished)
+{
+    visited[u] = true;
+
+    int v = students[u];
+
+    bool result = true;
+    if (!visited[v])
+    {
+        result = dfs(v, students, visited, finished);
+    }
+    else
+    {
+        if (!finished[v])
+        {
+            result = false;
+        }
+    }
+
+    finished[u] = true;
+
+    return result;
+}
+
 int main()
 {
     ios::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m, k;
-    cin >> n >> m >> k;
+    int t;
+    cin >> t;
 
-    vector<vector<int>> boardStartWithWhite(n + 1, vector<int>(m + 1, 0));
-    vector<vector<int>> boardStartWithBlack(n + 1, vector<int>(m + 1, 0));
-
-    for (int i = 1; i <= n; ++i)
+    while (t--)
     {
-        string s;
-        cin >> s;
+        int n;
+        cin >> n;
+        vector<int> students(n + 1);
+        vector<bool> visited(n + 1, false);
+        vector<bool> finished(n + 1, false);
+
+        for (int i = 1; i <= n; ++i)
+        {
+            cin >> students[i];
+        }
+
+        int count = 0;
         
-        for (int j = 1; j <= m; ++j)
+        for (int i = 1; i <= n; ++i)
         {
-            boardStartWithWhite[i][j] = boardStartWithWhite[i - 1][j] + boardStartWithWhite[i][j - 1] - boardStartWithWhite[i - 1][j - 1];
-            boardStartWithBlack[i][j] = boardStartWithBlack[i - 1][j] + boardStartWithBlack[i][j - 1] - boardStartWithBlack[i - 1][j - 1];
-            
-            if ((i + j) % 2 == 0)
+            if (!visited[i])
             {
-                if (s[j - 1] == 'B')
+                if (dfs(i, students, visited, finished))
                 {
-                    boardStartWithWhite[i][j] += 1;
-                }
-                else if (s[j - 1] == 'W')
-                {
-                    boardStartWithBlack[i][j] += 1;
-                }    
-            }
-            else
-            {
-                if (s[j - 1] == 'B')
-                {
-                    boardStartWithBlack[i][j] += 1;
-                }
-                else if (s[j - 1] == 'W')
-                {
-                    boardStartWithWhite[i][j] += 1;
+                    count++;
                 }
             }
         }
+        
+        cout << count << "\n";
     }
-
-    int minValue = 2147483647;
-    for (int i = k; i <= n; ++i)
-    {
-        for (int j = k; j <= m; ++j)
-        {
-            const int y = i - k;
-            const int x = j - k;
-            const int blackMinValue = boardStartWithBlack[i][j] - boardStartWithBlack[y][j] - boardStartWithBlack[i][x] + boardStartWithBlack[y][x];
-            const int whiteMinValue = boardStartWithWhite[i][j] - boardStartWithWhite[y][j] - boardStartWithWhite[i][x] + boardStartWithWhite[y][x];
-            const int tempMinValue = min(blackMinValue, whiteMinValue); 
-            minValue = min(tempMinValue, minValue);
-        }
-    }
-
-    cout << minValue << "\n";
-
+    
     return 0;
 }
