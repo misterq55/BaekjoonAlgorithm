@@ -1,58 +1,8 @@
 ﻿#include <iostream>
 #include <vector>
 #include <map>
+#include <queue>
 using namespace std;
-
-vector<vector<int>> field;
-vector<vector<bool>> visited;
-vector<vector<bool>> finished;
-vector<pair<int, int>> direction = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-
-int convertInput(const char c)
-{
-    switch (c)
-    {
-    case 'U':
-        return 0;
-        break;
-    case 'D':
-        return 1;
-        break;
-    case 'L':
-        return 2;
-        break;
-    case 'R':
-        return 3;
-        break;
-    default:
-        return -1;
-        break;
-    }
-}
-
-bool dfs(int i, int j)
-{
-    visited[i][j] = true;
-
-    const pair<int, int> dir = direction[field[i][j]];
-    const int y = i + dir.first;
-    const int x = j + dir.second;
-
-    bool result = false;
-    
-    if (!visited[y][x])
-    {
-        result = dfs(y, x);
-    }
-    else if (!finished[y][x])
-    {
-        result = true;
-    }
-    
-    finished[i][j] = true;
-
-    return result;
-}
 
 int main()
 {
@@ -60,41 +10,101 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m;
-    cin >> n >> m;
+    int n, k, l;
+    cin >> n >> k;
 
-    field = vector<vector<int>>(n + 2, vector<int>(m + 2, -1));
-    visited = vector<vector<bool>>(n + 2, vector<bool>(m + 2, false));
-    finished = vector<vector<bool>>(n + 2, vector<bool>(m + 2, false));
-    
+    vector<vector<int>> field(n + 2, vector<int>(n + 2, -1));
+    vector<pair<int, int>> directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+    int curDirIndex = 0;
+    vector<pair<int, char>> commands;
+    pair<int, int> snakeHead = {1, 1};
+    pair<int, int> snakeTail = {1, 1};
+
     for (int i = 1; i <= n; ++i)
     {
-        for (int j = 1; j <= m; ++j)
+        for (int j = 1; j <= n; ++j)
         {
-            char c;
-            cin >> c;
-
-            field[i][j] = convertInput(c);
+            field[i][j] = 0;
         }
     }
 
-    int count = 0;
+    field[snakeHead.first][snakeHead.second] = 1;
 
-    for (int i = 1; i <= n; ++i)
+    for (int i = 1; i <= k; ++i)
     {
-        for (int j = 1; j <= m; ++j)
+        int row, col;
+        cin >> row >> col;
+        field[row][col] = 2;
+    }
+
+    cin >> l;
+
+    commands = vector<pair<int, char>>(l + 1);
+
+    for (int i = 1; i <= l; ++i)
+    {
+        cin >> commands[i].first >> commands[i].second;
+    }
+
+    // move
+    bool gameOver = false;
+    int count = 0;
+    int currCommandIndex = 1;
+
+    while (!gameOver)
+    {
+        int seconds = commands[currCommandIndex].first;
+        char directionCommand = commands[currCommandIndex].second;
+
+        while (true)
         {
-            if (!visited[i][j])
-            {
-                if (dfs(i, j))
-                {
-                    count++;
-                }
+            count++;
+            const pair<int, int>& direction = directions[curDirIndex];
+
+            if (field[snakeHead.first + direction.first][snakeHead.second + direction.second] == 0)
+            {   
+                field[snakeTail.first + direction.first][snakeTail.second + direction.second] = 1;
+                field[snakeTail.first][snakeTail.second] = 0;
+                snakeTail.first += direction.first;
+                snakeTail.second += direction.second;
             }
+            else if (field[snakeHead.first + direction.first][snakeHead.second + direction.second] == 1
+                || field[snakeHead.first + direction.first][snakeHead.second + direction.second] == -1)
+            {
+                gameOver = true;
+                break;
+            }
+
+            field[snakeHead.first + direction.first][snakeHead.second + direction.second] = 1;
+            snakeHead.first += direction.first;
+            snakeHead.second += direction.second;
+            
+            seconds--;
+            if (seconds == 0)
+            {
+                switch (directionCommand)
+                {
+                case 'D':
+                    curDirIndex = (curDirIndex + 1 + 4) % 4; 
+                    break;
+                case 'L':
+                    curDirIndex = (curDirIndex - 1 + 4) % 4;
+                    break;
+                default:
+                    break;
+                }
+                currCommandIndex++;
+                break;
+            }
+        }
+
+        if (gameOver)
+        {
+            break;
         }
     }
 
     cout << count << "\n";
-
+    
     return 0;
 }
