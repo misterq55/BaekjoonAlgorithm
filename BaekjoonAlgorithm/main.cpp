@@ -15,10 +15,6 @@ int main()
 
     vector<vector<int>> field(n + 2, vector<int>(n + 2, -1));
     vector<pair<int, int>> directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
-    int curDirIndex = 0;
-    vector<pair<int, char>> commands;
-    pair<int, int> snakeHead = {1, 1};
-    pair<int, int> snakeTail = {1, 1};
 
     for (int i = 1; i <= n; ++i)
     {
@@ -27,8 +23,6 @@ int main()
             field[i][j] = 0;
         }
     }
-
-    field[snakeHead.first][snakeHead.second] = 1;
 
     for (int i = 1; i <= k; ++i)
     {
@@ -39,34 +33,46 @@ int main()
 
     cin >> l;
 
-    commands = vector<pair<int, char>>(l + 1);
+    int curDirIndex = 0;
+    vector<pair<int, char>> commands(l + 1);
 
     for (int i = 1; i <= l; ++i)
     {
         cin >> commands[i].first >> commands[i].second;
     }
 
+    // head start
+    queue<pair<int, int>> q;
+    q.push({1, 1});
+    field[q.back().first][q.back().second] = 1;
+    
     // move
     bool gameOver = false;
     int count = 0;
-    int currCommandIndex = 1;
 
     while (!gameOver)
     {
-        int seconds = commands[currCommandIndex].first;
-        char directionCommand = commands[currCommandIndex].second;
-
-        while (true)
+        int currCommandIndex = 1;
+        for (int time = 1; ; ++time)
         {
             count++;
             const pair<int, int>& direction = directions[curDirIndex];
+            const pair<int, int> snakeHead = q.back();
+            const pair<int, int> newPos = {snakeHead.first + direction.first, snakeHead.second + direction.second};
 
-            if (field[snakeHead.first + direction.first][snakeHead.second + direction.second] == 0)
-            {   
-                field[snakeTail.first + direction.first][snakeTail.second + direction.second] = 1;
+            if (field[newPos.first][newPos.second] == 0)
+            {
+                field[newPos.first][newPos.second] = 1;
+                q.push(newPos);
+                
+                const pair<int, int> snakeTail = q.front();
                 field[snakeTail.first][snakeTail.second] = 0;
-                snakeTail.first += direction.first;
-                snakeTail.second += direction.second;
+                q.pop();
+            }
+            else if (field[newPos.first][newPos.second] == 2)
+            {
+                field[newPos.first][newPos.second] = 1;
+                q.push(newPos);
             }
             else if (field[snakeHead.first + direction.first][snakeHead.second + direction.second] == 1
                 || field[snakeHead.first + direction.first][snakeHead.second + direction.second] == -1)
@@ -75,26 +81,15 @@ int main()
                 break;
             }
 
-            field[snakeHead.first + direction.first][snakeHead.second + direction.second] = 1;
-            snakeHead.first += direction.first;
-            snakeHead.second += direction.second;
-            
-            seconds--;
-            if (seconds == 0)
+            if (currCommandIndex <= l && commands[currCommandIndex].first == time)
             {
-                switch (directionCommand)
-                {
-                case 'D':
-                    curDirIndex = (curDirIndex + 1 + 4) % 4; 
-                    break;
-                case 'L':
-                    curDirIndex = (curDirIndex - 1 + 4) % 4;
-                    break;
-                default:
-                    break;
-                }
+                const char dirCommand = commands[currCommandIndex].second;
+                if (dirCommand == 'D')
+                    curDirIndex = (curDirIndex + 1 + 4) % 4;
+                else if (dirCommand == 'L')
+                    curDirIndex = (curDirIndex -1 + 4) % 4;
+
                 currCommandIndex++;
-                break;
             }
         }
 
