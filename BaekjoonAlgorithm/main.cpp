@@ -34,11 +34,13 @@ int main()
     cin >> l;
 
     int curDirIndex = 0;
-    vector<pair<int, char>> commands(l + 1);
-
+    queue<pair<int, char>> commandQ;
     for (int i = 1; i <= l; ++i)
     {
-        cin >> commands[i].first >> commands[i].second;
+        int x;
+        char c;
+        cin >> x >> c;
+        commandQ.push({x, c});
     }
 
     // head start
@@ -52,7 +54,6 @@ int main()
 
     while (!gameOver)
     {
-        int currCommandIndex = 1;
         for (int time = 1; ; ++time)
         {
             count++;
@@ -81,15 +82,15 @@ int main()
                 break;
             }
 
-            if (currCommandIndex <= l && commands[currCommandIndex].first == time)
+            if (!commandQ.empty() && commandQ.front().first == time)
             {
-                const char dirCommand = commands[currCommandIndex].second;
+                char dirCommand = commandQ.front().second;
                 if (dirCommand == 'D')
                     curDirIndex = (curDirIndex + 1 + 4) % 4;
                 else if (dirCommand == 'L')
                     curDirIndex = (curDirIndex -1 + 4) % 4;
 
-                currCommandIndex++;
+                commandQ.pop();
             }
         }
 
