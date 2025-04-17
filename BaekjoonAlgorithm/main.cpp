@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <vector>
 #include <map>
-#include <queue>
+#include <algorithm>
 using namespace std;
 
 enum E_MoveDir
@@ -12,22 +12,99 @@ enum E_MoveDir
     Right,
 };
 
-void move(vector<vector<int>> field, const int n, const E_MoveDir dir)
+int move(vector<vector<int>>& field, const int n, const E_MoveDir dir)
 {
-    vector<pair<int, int>> directions = {{1, 0}, {-1, 0}, {0, -1}, {0, 1}};
-    vector<pair<int, int>> startPos = {{n, 1}, {1, 0}, {0, n}, {0, 1}};
+    int maxValue = 0;
+    const bool bisHorizontal = dir >= 2;
+    const bool bisPrograded = dir % 2 == 0;
 
-    int count = n;
-
-    const pair<int, int> start = startPos[dir];
-    
     for (int i = 1; i <= n; ++i)
     {
         vector<int> line;
         for (int j = 1; j <= n; ++j)
         {
-            line.push_back(field[i][j]);
+            int y = i;
+            int x = j;
+
+            if (!bisHorizontal)
+            {
+                y = j;
+                x = i;
+            }
+
+            if (field[y][x] != 0)
+            {
+                line.push_back(field[y][x]);
+            }
         }
+
+        if (!bisPrograded)
+        {
+            reverse(line.begin(), line.end());    
+        }
+        
+        vector<int> merged;
+        for (int j = 0; j < static_cast<int>(line.size()); ++j)
+        {
+            if (j + 1 < static_cast<int>(line.size()) && line[j] == line[j + 1])
+            {
+                merged.push_back(line[j] * 2);
+                ++j;
+            }
+            else
+            {
+                merged.push_back(line[j]);
+            }
+        }
+
+        merged.resize(n, 0);
+        
+        for (int j = 1; j <= n; ++j)
+        {
+            int y = i;
+            int x = j;
+
+            int index = bisPrograded ? j - 1 : n - j;
+            
+            if (!bisHorizontal)
+            {
+                y = j;
+                x = i;
+            }
+
+            field[y][x] = merged[index];
+            maxValue = max(maxValue, field[y][x]);
+        }
+    }
+
+    return maxValue;
+}
+
+void dfs(vector<vector<int>> field, int& maxValue, int depth, const int n)
+{
+    if (n == 1)
+    {
+        maxValue = field[1][1];
+        return;
+    }
+    
+    if (depth == 0)
+    {
+        return;
+    }
+
+    for (int i = 0; i < 4; ++i)
+    {
+        vector<vector<int>> copiedField = field;
+        int curMax = move(copiedField, n, static_cast<E_MoveDir>(i));
+
+        if (copiedField == field)
+        {
+            continue;
+        }
+
+        maxValue = max(maxValue, curMax);
+        dfs(copiedField, maxValue, depth - 1, n);
     }
 }
 
@@ -46,10 +123,14 @@ int main()
         for (int j = 1; j <= n; ++j)
         {
             cin >> field[i][j];
-        }   
+        }
     }
 
-    move(field, n, E_MoveDir::Up);
+    int depth = 5;
+    int maxValue = 0;
+    dfs(field, maxValue, depth, n);
+    
+    cout << maxValue << "\n";
     
     return 0;
 }
