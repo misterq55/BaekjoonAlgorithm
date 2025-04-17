@@ -58,21 +58,24 @@ int move(vector<vector<int>>& field, const int n, const E_MoveDir dir)
         }
 
         merged.resize(n, 0);
+
+        if (!bisPrograded)
+        {
+            reverse(merged.begin(), merged.end());    
+        }
         
         for (int j = 1; j <= n; ++j)
         {
             int y = i;
             int x = j;
 
-            int index = bisPrograded ? j - 1 : n - j;
-            
             if (!bisHorizontal)
             {
                 y = j;
                 x = i;
             }
 
-            field[y][x] = merged[index];
+            field[y][x] = merged[j - 1];
             maxValue = max(maxValue, field[y][x]);
         }
     }
