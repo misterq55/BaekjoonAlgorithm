@@ -1,115 +1,114 @@
 ﻿#include <iostream>
 #include <vector>
-#include <map>
-#include <algorithm>
 using namespace std;
 
-enum E_MoveDir
+class Robot
 {
-    Up,
-    Down,
-    Left,
-    Right,
-};
+public:
+    Robot() {}
+    ~Robot() {}
 
-int move(vector<vector<int>>& field, const int n, const E_MoveDir dir)
-{
-    int maxValue = 0;
-    const bool bisHorizontal = dir >= 2;
-    const bool bisPrograded = dir % 2 == 0;
-
-    for (int i = 1; i <= n; ++i)
+public:
+    void SetUpInitialInfo(const int r, const int c, const int d)
     {
-        vector<int> line;
-        for (int j = 1; j <= n; ++j)
-        {
-            int y = i;
-            int x = j;
-
-            if (!bisHorizontal)
-            {
-                y = j;
-                x = i;
-            }
-
-            if (field[y][x] != 0)
-            {
-                line.push_back(field[y][x]);
-            }
-        }
-
-        if (!bisPrograded)
-        {
-            reverse(line.begin(), line.end());    
-        }
-        
-        vector<int> merged;
-        for (int j = 0; j < static_cast<int>(line.size()); ++j)
-        {
-            if (j + 1 < static_cast<int>(line.size()) && line[j] == line[j + 1])
-            {
-                merged.push_back(line[j] * 2);
-                ++j;
-            }
-            else
-            {
-                merged.push_back(line[j]);
-            }
-        }
-
-        merged.resize(n, 0);
-
-        if (!bisPrograded)
-        {
-            reverse(merged.begin(), merged.end());    
-        }
-        
-        for (int j = 1; j <= n; ++j)
-        {
-            int y = i;
-            int x = j;
-
-            if (!bisHorizontal)
-            {
-                y = j;
-                x = i;
-            }
-
-            field[y][x] = merged[j - 1];
-            maxValue = max(maxValue, field[y][x]);
-        }
-    }
-
-    return maxValue;
-}
-
-void dfs(vector<vector<int>> field, int& maxValue, int depth, const int n)
-{
-    if (n == 1)
-    {
-        maxValue = field[1][1];
-        return;
+        Pos.first = r;
+        Pos.second = c;
+        DirIndex = d;
     }
     
-    if (depth == 0)
+    void SetUpRoomInfo(const int n, const int m, vector<vector<int>>&& room)
     {
-        return;
+        Row = n;
+        Col = m;
+        Room = room;
     }
 
-    for (int i = 0; i < 4; ++i)
+    void StartClean()
     {
-        vector<vector<int>> copiedField = field;
-        int curMax = move(copiedField, n, static_cast<E_MoveDir>(i));
-
-        if (copiedField == field)
+        while (true)
         {
-            continue;
-        }
+            const int y = Pos.first;
+            const int x = Pos.second;
 
-        maxValue = max(maxValue, curMax);
-        dfs(copiedField, maxValue, depth - 1, n);
+            // 1
+            if (Room[y][x] == 0)
+            {
+                Room[y][x] = 2;
+                CleanCount++;
+            }
+        
+            bool bisClean = true;
+            for (int i = 0; i < 4; ++i)
+            {
+                const pair<int, int> dir = GetDirection(i);
+                const int ny = y + dir.first;
+                const int nx = x + dir.second;
+                if (Room[ny][nx] == 0)
+                {
+                    bisClean = false;
+                }
+            }
+        
+            // 2
+            if (bisClean)
+            {
+                const pair<int, int> dir = GetDirection(DirIndex);
+                const int ny = y - dir.first;
+                const int nx = x - dir.second;
+                if (Room[ny][nx] != 1)
+                {
+                    Pos.first = ny;
+                    Pos.second = nx;
+                    continue;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        
+            // 3
+            else
+            {
+                ChangeDirection();
+                const pair<int, int> dir = GetDirection(DirIndex);
+                const int ny = y + dir.first;
+                const int nx = x + dir.second;
+                if (Room[ny][nx] == 0)
+                {
+                    Pos.first = ny;
+                    Pos.second = nx;
+                    continue;
+                }
+            }
+        }
     }
-}
+
+    int GetCleanCount()
+    {
+        return CleanCount;
+    }
+
+private:
+    void ChangeDirection()
+    {
+        DirIndex = (DirIndex - 1 + 4) % 4; 
+    }
+
+    pair<int, int> GetDirection(const int index)
+    {
+        return Directons[index];
+    }
+    
+private:
+    pair<int, int> Pos;
+    int DirIndex = 0;
+    vector<pair<int, int>> Directons = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+    vector<vector<int>> Room;
+    int Row;
+    int Col;
+    int CleanCount = 0;
+};
 
 int main()
 {
@@ -117,23 +116,28 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n;
-    cin >> n;
+    Robot robot;
+    
+    int n, m;
+    cin >> n >> m;
+    
+    vector<vector<int>> room(vector<vector<int>> (n, vector<int>(m)));
 
-    vector<vector<int>> field(n + 2, vector<int>(n + 2, -1));
-    for (int i = 1; i <= n; ++i)
+    int r, c, d;
+    cin >> r >> c >> d;
+    for (int i = 0; i < n; ++i)
     {
-        for (int j = 1; j <= n; ++j)
+        for (int j = 0; j < m; ++j)
         {
-            cin >> field[i][j];
+            cin >> room[i][j];
         }
     }
 
-    int depth = 5;
-    int maxValue = 0;
-    dfs(field, maxValue, depth, n);
-    
-    cout << maxValue << "\n";
+    robot.SetUpInitialInfo(r, c, d);
+    robot.SetUpRoomInfo(n, m, move(room));
+
+    robot.StartClean();
+    cout << robot.GetCleanCount() << "\n";
     
     return 0;
 }
