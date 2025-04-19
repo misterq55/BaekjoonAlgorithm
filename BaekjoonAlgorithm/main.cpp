@@ -3,59 +3,61 @@
 #include <vector>
 using namespace std;
 
-class FireBall
+class BabyShark
 {
 public:
-    FireBall() {}
-    FireBall(const int n, const int r, const int c, const int m, const int s, const int d)
-        : MapSize(n), Pos({r, c}), Mass(m), Speed(s), DirIndex(d)
-    {}
-    ~FireBall() {}
+    BabyShark(){}
+    ~BabyShark(){}
 
 public:
-    void Move()
+    void SetPos(const int y, const int x)
     {
-        const pair<int, int> dir = Directions[DirIndex];
-        Pos.second = (Pos.second + dir.second * (Speed % MapSize) + MapSize) % MapSize;
-        Pos.first = (Pos.first + dir.first * (Speed % MapSize) + MapSize) % MapSize;
+        Pos = {y, x};
     }
 
-    pair<int, int> GetPos() const
+    void Eat()
     {
-        return Pos;
+        EatCount++;
+        if (Size == EatCount)
+        {
+            Size++;
+        }
     }
 
-    FireBall& operator+=(const FireBall& b)
+    int GetCandidateSize() const
     {
-        Mass += b.Mass;
-        Speed += b.Speed;
-
-        return *this;
+        return static_cast<int>(PreyCandiates.size());
     }
 
-    int GetMass() const
-    {
-        return Mass;
-    }
-
-    int GetSpeed() const
-    {
-        return Speed;
-    }
-    
-    int GetDirIndex() const
-    {
-        return DirIndex;
-    }
-    
 private:
+    int Size = 2;
+    int EatCount = 0;
     pair<int, int> Pos = {0, 0};
-    int MapSize = 0;
-    int Mass = 0;
-    int DirIndex = 0;
-    int Speed = 0;
-    vector<pair<int, int>> Directions = {{-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}};
+    vector<pair<int, int>> PreyCandiates;
 };
+
+void Input(vector<vector<int>>& field, int n)
+{
+    for (int i = 1; i <= n; ++i)
+    {
+        for (int j = 1; j <= n; ++j)
+        {
+            cin >> field[i][j];
+        }
+    }
+}
+
+void Output(vector<vector<int>>& field, int n)
+{
+    for (int i = 1; i <= n; ++i)
+    {
+        for (int j = 1; j <= n; ++j)
+        {
+            cout << field[i][j] << " ";
+        }
+        cout << "\n";
+    }
+}
 
 int main()
 {
@@ -63,87 +65,25 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m, k;
-    cin >> n >> m >> k;
+    int n;
+    cin >> n;
 
-    vector<vector<int>> field(n, vector<int>(n));
-    vector<FireBall> fireballs;
+    vector<vector<int>> field(n + 2, vector<int>(n + 2, -1));
+    vector<vector<int>> distances(n + 2, vector<int>(n + 2, -1));
+    BabyShark babyShark;
     
-    for (int i = 0; i < m; ++i)
+    Input(field, n);
+
+    for (int i = 1; i <= n; ++i)
     {
-        int r, c, ms, d, s;
-        cin >> r >> c >> ms >> s >> d;
-
-        fireballs.emplace_back(n, r, c, ms, s, d);
-    }
-
-    for (int i = 0; i < k; ++i)
-    {
-        // 움직임
-        map<pair<int, int>, vector<int>> collisionMap;
-        const int size = static_cast<int>(fireballs.size());
-        for (int j = 0; j < size; ++j)
+        for (int j = 1; j <= n; ++j)
         {
-            fireballs[j].Move();
-            const pair<int, int> pos = fireballs[j].GetPos();
-            collisionMap[pos].emplace_back(j);
-        }
-
-        vector<FireBall> newFireballs;
-        // 충돌 확인 후 융합
-        for (auto collision : collisionMap)
-        {
-            pair<int, int> pos = collision.first;
-            vector<int> collisionIndice = collision.second;
-            const int collisionSize = static_cast<int>(collisionIndice.size());
-            if (collisionSize == 0)
+            if (field[i][j] == 9)
             {
-                continue;
-            }
-            else if (collisionSize == 1)
-            {
-                newFireballs.emplace_back(fireballs[collisionIndice[0]]);
-            }
-            else
-            {
-                bool bDirCheckFalg = true;
-                for (int j = 1; j < collisionSize; ++j)
-                {
-                    fireballs[collisionIndice[0]] += fireballs[collisionIndice[j]];
-                    if (fireballs[collisionIndice[j]].GetDirIndex() % 2 != fireballs[collisionIndice[j - 1]].GetDirIndex() % 2)
-                    {
-                        bDirCheckFalg = false;
-                    }
-                }
-
-                // 융합된 파이어볼 분할
-                int newR = pos.first;
-                int newC = pos.second;
-                int newMass = fireballs[collisionIndice[0]].GetMass() / 5;
-                int newSpeed = fireballs[collisionIndice[0]].GetSpeed() / collisionSize;
-                int newDirIndex = bDirCheckFalg ? 0 : 1;
-                for (int j = 0; j < 4; ++j)
-                {
-                    if (newMass != 0)
-                    {
-                        newFireballs.emplace_back(n, newR,newC,newMass,newSpeed,j * 2 + newDirIndex);
-                    }
-                }
+                babyShark.SetPos(i, j);
             }
         }
-
-        collisionMap.clear();
-        fireballs = move(newFireballs);
     }
-
-    const int size = static_cast<int>(fireballs.size());
-    for (int i = 1; i < size; ++i)
-    {
-        fireballs[0] += fireballs[i];
-    }
-
-    const int ans = fireballs.empty() ? 0 : fireballs[0].GetMass();
-    cout << ans << "\n";
 
     return 0;
 }
