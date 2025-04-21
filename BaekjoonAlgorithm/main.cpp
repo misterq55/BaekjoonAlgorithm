@@ -1,115 +1,60 @@
 ﻿#include <iostream>
-#include <map>
-#include <queue>
 #include <vector>
+#include <cmath>
+#include <iomanip>
+#include <algorithm>
+#include <tuple>
 using namespace std;
 
-struct FishInfo
-{
-    int Distance = 0;
-    pair<int, int> Pos = {0, 0};
-
-    FishInfo() {}
-    FishInfo(int distance, pair<int, int> pos)
-        : Distance(distance), Pos(pos)
-    {}
-};
-
-struct CompareFish
-{
-    bool operator()(const FishInfo& fishA, const  FishInfo& fishB) const
-    {
-        if (fishA.Distance != fishB.Distance)
-        {
-            return fishA.Distance > fishB.Distance;
-        }
-
-        if (fishA.Pos.first != fishB.Pos.first)
-        {
-            return fishA.Pos.first > fishB.Pos.first;
-        }
-
-        return fishA.Pos.second > fishB.Pos.second;
-    }
-};
-
-class BabyShark
+class CUnionFound
 {
 public:
-    BabyShark(){}
-    
-    ~BabyShark(){}
+    CUnionFound() {}
+    ~CUnionFound() {}
 
 public:
-    void SetPos(const int y, const int x)
+    void Initialize(const int n)
     {
-        Pos = {y, x};
-    }
-
-    pair<int, int> GetPos()
-    {
-        return Pos;
-    }
-
-    void Eat()
-    {
-        const FishInfo fishInfo = PreyCandidatePQ.top();
-        Steps += fishInfo.Distance;
-        Pos = fishInfo.Pos;
-
-        PreyCandidatePQ = move(priority_queue<FishInfo, vector<FishInfo>, CompareFish>());
-        
-        EatCount++;
-        if (Size == EatCount)
+        Parent = move(vector<int>(n + 1, 0));
+        for (int i = 1; i <= n; ++i)
         {
-            EatCount = 0;
-            Size++;
+            Parent[i] = i;
         }
     }
 
-    int GetCandidateSize() const
+    int Find(const int x)
     {
-        return static_cast<int>(PreyCandidatePQ.size());
+        if (x != Parent[x])
+        {
+            Parent[x] = Find(Parent[x]);
+        }
+
+        return Parent[x];
     }
 
-    void EatCandidates(FishInfo fishInfo)
+    void Union(int x, int y)
     {
-        PreyCandidatePQ.push(fishInfo);
+        x = Find(x);
+        y = Find(y);
+        if (x != y)
+        {
+            Parent[x] = y;
+        }
     }
-
-    int GetSize()
-    {
-        return Size;
-    }
-    
-    int GetSteps()
-    {
-        return Steps;
-    }
-    
 private:
-    pair<int, int> Pos = {0, 0};
-    int Size = 2;
-    int EatCount = 0;
-    priority_queue<FishInfo, vector<FishInfo>, CompareFish> PreyCandidatePQ;
-    int Steps = 0;
+    vector<int> Parent;
 };
 
-void Initialize(vector<vector<int>>& field, BabyShark& BabyShark, int n)
+double CalculateDistance(const pair<double, double>& starPosA, const pair<double, double>& starPosB)
 {
-    for (int i = 1; i <= n; ++i)
-    {
-        for (int j = 1; j <= n; ++j)
-        {
-            cin >> field[i][j];
+    const double x1 = starPosA.first;
+    const double y1 = starPosA.second;
+    const double x2 = starPosB.first;
+    const double y2 = starPosB.second;
 
-            if (field[i][j] == 9)
-            {
-                BabyShark.SetPos(i, j);
-                field[i][j] = 0;
-            }
-        }
-    }
+    const double distance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+
+    return distance;
 }
 
 int main()
@@ -121,62 +66,48 @@ int main()
     int n;
     cin >> n;
 
-    vector<vector<int>> field(n + 2, vector<int>(n + 2, -1));
-    vector<pair<int, int>> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
-    BabyShark babyShark;
-    
-    Initialize(field, babyShark, n);
-    
-    while (true)
+    vector<pair<double, double>> stars(n + 1);
+    vector<tuple<double, int, int>> edges;
+    vector<bool> visited(n + 1, false);
+
+    for (int i = 1; i <= n; ++i)
     {
-        vector<vector<int>> distances(n + 2, vector<int>(n + 2, 0));
-        vector<vector<bool>> visited(n + 2, vector<bool>(n + 2, false));
-        queue<pair<int, int>> q;
+        cin >> stars[i].first >> stars[i].second;
+    }
 
-        q.push(babyShark.GetPos());
-
-        while (!q.empty())
+    for (int i = 1; i <= n; ++i)
+    {
+        for (int j = 1; j <= n; ++j)
         {
-            pair<int, int> pos = q.front();
-            const int y = pos.first;
-            const int x = pos.second;
-
-            q.pop();
-            
-            for (const auto& direction : directions)
+            if (i != j)
             {
-                const int ny = y + direction.first;
-                const int nx = x + direction.second;
-                const int fishSize = field[ny][nx];
-
-                if (fishSize > -1 && fishSize <= babyShark.GetSize() && !visited[ny][nx])
-                {
-                    visited[ny][nx] = true;
-                    distances[ny][nx] = distances[y][x] + 1;
-                    q.push({ny, nx});
-
-                    if (fishSize > 0 && fishSize < babyShark.GetSize())
-                    {
-                        FishInfo fish(distances[ny][nx], {ny, nx});
-                        babyShark.EatCandidates(fish);
-                    }
-                }
+                edges.push_back(make_tuple(CalculateDistance(stars[i], stars[j]), i, j));
             }
         }
+    }
 
-        if (babyShark.GetCandidateSize() <= 0)
+    double weight = 0.f;
+
+    CUnionFound unionFind;
+    unionFind.Initialize(n);
+
+    sort(edges.begin(), edges.end());
+
+    for (const auto& edge : edges)
+    {
+        const int x = get<1>(edge);
+        const int y = get<2>(edge);
+
+        if (unionFind.Find(x) == unionFind.Find(y))
         {
-            break;
+            continue;
         }
 
-        babyShark.Eat();
-        const int by = babyShark.GetPos().first;
-        const int bx = babyShark.GetPos().second;
-
-        field[by][bx] = 0;
+        weight += get<0>(edge);
+        unionFind.Union(x, y);
     }
-    
-    cout << babyShark.GetSteps() << "\n";
+
+    cout << fixed << setprecision(2) << weight << "\n";
 
     return 0;
 }
