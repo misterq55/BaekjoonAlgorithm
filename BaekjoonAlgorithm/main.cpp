@@ -1,24 +1,18 @@
-﻿#include <algorithm>
-#include <iostream>
+﻿#include <iostream>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
-bool isPossible(const vector<int>& coordinates, const long long mid, const int m)
+bool isPossible(const vector<long long>& budgetRequest, const long long possibleBudget, const long long budget)
 {
-    int count = 1;
-    int lastPos = coordinates[0];
-
-    const int size = static_cast<int>(coordinates.size());
-    for (int i = 1; i < size; ++i)
+    const int size = static_cast<int>(budgetRequest.size());
+    long long sum = 0;
+    for (int i = 0; i < size; ++i)
     {
-        if (coordinates[i] - lastPos >= mid)
-        {
-            count++;
-            lastPos = coordinates[i];
-        }
+        sum += (budgetRequest[i] > possibleBudget ? possibleBudget : budgetRequest[i]);
     }
-
-    return count >= m;
+    
+    return budget >= sum;
 }
 
 int main()
@@ -27,24 +21,25 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m;
-    cin >> n >> m;
+    long long n, m;
+    cin >> n;
 
-    vector<int> coordinates(n);
+    vector<long long> budgetRequest(n, 0);
     for (int i = 0; i < n; ++i)
     {
-        cin >> coordinates[i];
+        cin >> budgetRequest[i];
     }
 
-    sort(coordinates.begin(), coordinates.end());
+    cin >> m;
     
-    long long left = 1, right = coordinates.back() - coordinates.front(), ans = 0;
+    long long left = 0;
+    long long right = *max_element(budgetRequest.begin(), budgetRequest.end());
+    long long ans = 0;
 
     while (left <= right)
     {
-        long long mid = left + (right - left) / 2;
-
-        if (isPossible(coordinates, mid, m))
+        const long long mid = left + (right - left) / 2;
+        if (isPossible(budgetRequest, mid, m))
         {
             ans = mid;
             left = mid + 1;
@@ -56,6 +51,6 @@ int main()
     }
 
     cout << ans << "\n";
-
+    
     return 0;
 }
