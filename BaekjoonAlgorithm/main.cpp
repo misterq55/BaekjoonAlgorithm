@@ -1,24 +1,61 @@
 ﻿#include <iostream>
+#include <stack>
 #include <vector>
-#include <queue>
-#include <algorithm>
 using namespace std;
 
-void deleteFromTree(const int curr, vector<pair<int, vector<int>>>& tree, queue<int>& q)
+enum E_OrderType
 {
-    vector<int>& children = tree[curr].second;
-    for (const int child : children)
+    Preorder, Inorder, Postorder,
+};
+
+void dfs(const vector<pair<char, pair<char, char>>>& tree, const int index, const E_OrderType order)
+{
+    const char ch = static_cast<char>(index + 'A');
+    
+    if (ch == '.')
     {
-        if (tree[child].first != -1)
-        {
-            q.push(child);
-        }
+        return;
     }
 
-    int parent = tree[curr].first;
-    vector<int>& childrenFromParent = tree[parent].second;
-    childrenFromParent.erase(remove(childrenFromParent.begin(), childrenFromParent.end(), curr), childrenFromParent.end());
-    tree[curr].first = -1;
+    switch (order)
+    {
+        case Preorder:
+            {
+                cout << ch;
+
+                const int leftIndex = tree[index].second.first - 'A';
+                dfs(tree, leftIndex, order);
+
+                const int rightIndex = tree[index].second.second - 'A';
+                dfs(tree, rightIndex, order);
+            }
+            break;
+        case Inorder:
+            {
+                const int leftIndex = tree[index].second.first - 'A';
+                dfs(tree, leftIndex, order);
+                
+                cout << ch;
+                
+                const int rightIndex = tree[index].second.second - 'A';
+                dfs(tree, rightIndex, order);
+            }
+            break;
+        case Postorder:
+            {
+                const int leftIndex = tree[index].second.first - 'A';
+                dfs(tree, leftIndex, order);
+
+                const int rightIndex = tree[index].second.second - 'A';
+                dfs(tree, rightIndex, order);
+
+                cout << ch;
+            }
+            break;
+        default:
+            break;
+    }
+    
 }
 
 int main()
@@ -30,48 +67,39 @@ int main()
     int n;
     cin >> n;
 
-    vector<pair<int, vector<int>>> tree(n);
+    vector<pair<char, pair<char, char>>> tree(n);
+
     for (int i = 0; i < n; ++i)
     {
-        int node;
-        cin >> node;
+        char parent, leftChild, rightChild;
+        cin >> parent >> leftChild >> rightChild;
 
-        if (node == -1)
+        tree[parent - 'A'].second.first = leftChild;
+        tree[parent - 'A'].second.second = rightChild;
+
+        if (leftChild != '.')
         {
-            node = i;
+            tree[leftChild - 'A'].first = parent;
         }
 
-        if (node != i)
+        if (rightChild != '.')
         {
-            tree[node].second.push_back(i);
+            tree[rightChild - 'A'].first = parent;
         }
-        tree[i].first = node;
     }
 
-    int toDelete;
-    cin >> toDelete;
+    stack<int> st;
 
-    queue<int> q;
-    deleteFromTree(toDelete, tree, q);
+    st.push(0);
     
-    while (!q.empty())
-    {
-        const int curr = q.front();
-        q.pop();
-
-        deleteFromTree(curr, tree, q);
-    }
+    dfs(tree, 0, Preorder);
+    cout << "\n";
     
-    int count = 0;
-    for (int i = 0; i < n; ++i)
-    {
-        if (tree[i].first != -1 && tree[i].second.empty())
-        {
-            count++;
-        }
-    }
-
-    cout << count << "\n";
+    dfs(tree, 0, Inorder);
+    cout << "\n";
+    
+    dfs(tree, 0, Postorder);
+    cout << "\n";
     
     return 0;
 }
