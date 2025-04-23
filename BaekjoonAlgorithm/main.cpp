@@ -1,61 +1,30 @@
 ﻿#include <iostream>
-#include <stack>
 #include <vector>
+#include <unordered_map>
 using namespace std;
 
-enum E_OrderType
+bool cycleCheck(const int node, unordered_map<int, pair<vector<int>, vector<int>>>& tree, unordered_map<int, bool>& visited, unordered_map<int, bool>& finished)
 {
-    Preorder, Inorder, Postorder,
-};
+    bool bisCycle = false;
 
-void dfs(const vector<pair<char, pair<char, char>>>& tree, const int index, const E_OrderType order)
-{
-    const char ch = static_cast<char>(index + 'A');
-    
-    if (ch == '.')
+    visited[node] = true;
+    vector<int>& adj = tree[node].second;
+
+    for (const int& next : adj)
     {
-        return;
+        if (!visited[next])
+        {
+            bisCycle = cycleCheck(next, tree, visited, finished);
+        }
+        else if (!finished[next])
+        {
+            bisCycle = true;
+        }
     }
 
-    switch (order)
-    {
-        case Preorder:
-            {
-                cout << ch;
-
-                const int leftIndex = tree[index].second.first - 'A';
-                dfs(tree, leftIndex, order);
-
-                const int rightIndex = tree[index].second.second - 'A';
-                dfs(tree, rightIndex, order);
-            }
-            break;
-        case Inorder:
-            {
-                const int leftIndex = tree[index].second.first - 'A';
-                dfs(tree, leftIndex, order);
-                
-                cout << ch;
-                
-                const int rightIndex = tree[index].second.second - 'A';
-                dfs(tree, rightIndex, order);
-            }
-            break;
-        case Postorder:
-            {
-                const int leftIndex = tree[index].second.first - 'A';
-                dfs(tree, leftIndex, order);
-
-                const int rightIndex = tree[index].second.second - 'A';
-                dfs(tree, rightIndex, order);
-
-                cout << ch;
-            }
-            break;
-        default:
-            break;
-    }
+    finished[node] = true;
     
+    return bisCycle;
 }
 
 int main()
@@ -64,42 +33,70 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n;
-    cin >> n;
-
-    vector<pair<char, pair<char, char>>> tree(n);
-
-    for (int i = 0; i < n; ++i)
+    int k = 0;
+    unordered_map<int, pair<vector<int>, vector<int>>> tree;
+    
+    while (true)
     {
-        char parent, leftChild, rightChild;
-        cin >> parent >> leftChild >> rightChild;
+        int u, v;
+        cin >> u >> v;
 
-        tree[parent - 'A'].second.first = leftChild;
-        tree[parent - 'A'].second.second = rightChild;
-
-        if (leftChild != '.')
+        if (u == 0 && v == 0)
         {
-            tree[leftChild - 'A'].first = parent;
+            unordered_map<int, bool> visited;
+            unordered_map<int, bool> finished;
+            
+            bool bisTree = true;
+            int rootCounter = 0;
+            
+            for (const auto& node : tree)
+            {
+                const vector<int>& inDegree = node.second.first;
+                if (inDegree.empty())
+                {
+                    rootCounter++;
+                }
+
+                if (inDegree.size() > 1)
+                {
+                    bisTree = false;
+                    break;
+                }
+
+                if (!visited[node.first])
+                {
+                    if (cycleCheck(node.first, tree, visited, finished))
+                    {
+                        bisTree = false;
+                        break;
+                    }
+                }
+            }
+
+            if (rootCounter > 1)
+            {
+                bisTree = false;
+            }
+
+            const string strTree = bisTree ? "" : " not";
+            cout << "Case " << ++k << " is" << strTree << " a tree." << "\n";
+            
+            tree.clear();
+        }
+        else
+        {
+            vector<int>& outDegree = tree[u].second;
+            outDegree.push_back(v);
+
+            vector<int>& inDegree = tree[v].first;
+            inDegree.push_back(u);
         }
 
-        if (rightChild != '.')
+        if (u == -1 && v == -1)
         {
-            tree[rightChild - 'A'].first = parent;
+            break;
         }
     }
-
-    stack<int> st;
-
-    st.push(0);
-    
-    dfs(tree, 0, Preorder);
-    cout << "\n";
-    
-    dfs(tree, 0, Inorder);
-    cout << "\n";
-    
-    dfs(tree, 0, Postorder);
-    cout << "\n";
     
     return 0;
 }
