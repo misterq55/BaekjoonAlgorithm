@@ -1,18 +1,24 @@
 ﻿#include <iostream>
 #include <vector>
+#include <queue>
 #include <algorithm>
 using namespace std;
 
-bool isPossible(const vector<long long>& budgetRequest, const long long possibleBudget, const long long budget)
+void deleteFromTree(const int curr, vector<pair<int, vector<int>>>& tree, queue<int>& q)
 {
-    const int size = static_cast<int>(budgetRequest.size());
-    long long sum = 0;
-    for (int i = 0; i < size; ++i)
+    vector<int>& children = tree[curr].second;
+    for (const int child : children)
     {
-        sum += (budgetRequest[i] > possibleBudget ? possibleBudget : budgetRequest[i]);
+        if (tree[child].first != -1)
+        {
+            q.push(child);
+        }
     }
-    
-    return budget >= sum;
+
+    int parent = tree[curr].first;
+    vector<int>& childrenFromParent = tree[parent].second;
+    childrenFromParent.erase(remove(childrenFromParent.begin(), childrenFromParent.end(), curr), childrenFromParent.end());
+    tree[curr].first = -1;
 }
 
 int main()
@@ -21,36 +27,51 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    long long n, m;
+    int n;
     cin >> n;
 
-    vector<long long> budgetRequest(n, 0);
+    vector<pair<int, vector<int>>> tree(n);
     for (int i = 0; i < n; ++i)
     {
-        cin >> budgetRequest[i];
+        int node;
+        cin >> node;
+
+        if (node == -1)
+        {
+            node = i;
+        }
+
+        if (node != i)
+        {
+            tree[node].second.push_back(i);
+        }
+        tree[i].first = node;
     }
 
-    cin >> m;
+    int toDelete;
+    cin >> toDelete;
+
+    queue<int> q;
+    deleteFromTree(toDelete, tree, q);
     
-    long long left = 0;
-    long long right = *max_element(budgetRequest.begin(), budgetRequest.end());
-    long long ans = 0;
-
-    while (left <= right)
+    while (!q.empty())
     {
-        const long long mid = left + (right - left) / 2;
-        if (isPossible(budgetRequest, mid, m))
+        const int curr = q.front();
+        q.pop();
+
+        deleteFromTree(curr, tree, q);
+    }
+    
+    int count = 0;
+    for (int i = 0; i < n; ++i)
+    {
+        if (tree[i].first != -1 && tree[i].second.empty())
         {
-            ans = mid;
-            left = mid + 1;
-        }
-        else
-        {
-            right = mid - 1;
+            count++;
         }
     }
 
-    cout << ans << "\n";
+    cout << count << "\n";
     
     return 0;
 }
