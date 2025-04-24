@@ -1,30 +1,43 @@
 ﻿#include <iostream>
+#include <queue>
 #include <vector>
-#include <unordered_map>
 using namespace std;
 
-bool cycleCheck(const int node, unordered_map<int, pair<vector<int>, vector<int>>>& tree, unordered_map<int, bool>& visited, unordered_map<int, bool>& finished)
+pair<int, int> findLongestDistance(const vector<vector<pair<int, int>>>& tree, const int n, const int node)
 {
-    bool bisCycle = false;
+    vector<int> distances(n + 1, -1);
+    queue<int> q;
+    q.push(node);
+    distances[node] = 0;
 
-    visited[node] = true;
-    vector<int>& adj = tree[node].second;
-
-    for (const int& next : adj)
+    while (!q.empty())
     {
-        if (!visited[next])
+        const int u = q.front();
+        q.pop();
+        const vector<pair<int, int>> &adj = tree[u];
+
+        for (const auto edge : adj)
         {
-            bisCycle = cycleCheck(next, tree, visited, finished);
-        }
-        else if (!finished[next])
-        {
-            bisCycle = true;
+            const int v = edge.first;
+            if (distances[v] == -1)
+            {
+                distances[v] = distances[u] + edge.second;
+                q.push(v);
+            }
         }
     }
 
-    finished[node] = true;
-    
-    return bisCycle;
+    pair<int, int> maxDistNode = {0, 0};
+    for (int i = 1; i <= n; ++i)
+    {
+        if (maxDistNode.second < distances[i])
+        {
+            maxDistNode.second = distances[i];
+            maxDistNode.first = i;
+        }
+    }
+
+    return move(maxDistNode);
 }
 
 int main()
@@ -33,70 +46,25 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int k = 0;
-    unordered_map<int, pair<vector<int>, vector<int>>> tree;
+    int n;
+    cin >> n;
+
+    vector<vector<pair<int, int>>> tree(n + 1);
     
-    while (true)
+
+    for (int i = 1; i <= n - 1; ++i)
     {
-        int u, v;
-        cin >> u >> v;
+        int u, v, w;
+        cin >> u >> v >> w;
 
-        if (u == 0 && v == 0)
-        {
-            unordered_map<int, bool> visited;
-            unordered_map<int, bool> finished;
-            
-            bool bisTree = true;
-            int rootCounter = 0;
-            
-            for (const auto& node : tree)
-            {
-                const vector<int>& inDegree = node.second.first;
-                if (inDegree.empty())
-                {
-                    rootCounter++;
-                }
-
-                if (inDegree.size() > 1)
-                {
-                    bisTree = false;
-                    break;
-                }
-
-                if (!visited[node.first])
-                {
-                    if (cycleCheck(node.first, tree, visited, finished))
-                    {
-                        bisTree = false;
-                        break;
-                    }
-                }
-            }
-
-            if (rootCounter > 1)
-            {
-                bisTree = false;
-            }
-
-            const string strTree = bisTree ? "" : " not";
-            cout << "Case " << ++k << " is" << strTree << " a tree." << "\n";
-            
-            tree.clear();
-        }
-        else
-        {
-            vector<int>& outDegree = tree[u].second;
-            outDegree.push_back(v);
-
-            vector<int>& inDegree = tree[v].first;
-            inDegree.push_back(u);
-        }
-
-        if (u == -1 && v == -1)
-        {
-            break;
-        }
+        tree[u].push_back(make_pair(v, w));
+        tree[v].push_back(make_pair(u, w));
     }
+
+    pair<int, int> n1 = findLongestDistance(tree, n, 1);
+    pair<int, int> n2 = findLongestDistance(tree, n, n1.first);
+
+    cout << n2.second << "\n";
     
     return 0;
 }
