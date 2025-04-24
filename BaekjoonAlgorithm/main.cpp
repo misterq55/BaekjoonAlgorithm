@@ -1,87 +1,22 @@
 ﻿#include <iostream>
 #include <queue>
-#include <tuple>
 #include <vector>
-#include <cmath>
 using namespace std;
 
-vector<tuple<int, int, vector<int>>> preProcess(const vector<vector<pair<int, int>>>& tree, const int n, const int max_k, const int node)
+void dfs(const vector<pair<int, pair<int, pair<int, int>>>>& tree, vector<vector<int>>& widthVec, int& counter, const int n, const int index)
 {
-    vector<tuple<int, int, vector<int>>> preProcessedData(n + 1, make_tuple(-1, -1, vector<int>(max_k + 1, -1)));
-    queue<int> q;
-    q.push(node);
-    get<0>(preProcessedData[node]) = 0;
-    get<1>(preProcessedData[node]) = 0;
-    get<2>(preProcessedData[node])[0] = node;
-
-    while (!q.empty())
+    if (index == -1)
     {
-        const int u = q.front();
-        q.pop();
-        const vector<pair<int, int>>& adj = tree[u];
-
-        for (const auto edge : adj)
-        {
-            const int v = edge.first;
-            const int distance = get<1>(preProcessedData[v]);
-            if (distance == -1)
-            {
-                get<0>(preProcessedData[v]) = get<0>(preProcessedData[u]) + 1;
-                get<1>(preProcessedData[v]) = get<1>(preProcessedData[u]) + edge.second;
-                get<2>(preProcessedData[v])[0] = u;
-                q.push(v);
-            }
-        }
+        return;
     }
 
-    return preProcessedData;
-}
-
-void preProcessBinaryLifting(vector<tuple<int, int, vector<int>>>& preProcessedData, const int n, const int max_k)
-{
-    for (int k = 1; k <= max_k; ++k)
-    {
-        for (int i = 1; i <= n; ++i)
-        {
-            vector<int>& parent = get<2>(preProcessedData[i]);
-            if (parent[k - 1] != -1)
-            {
-                parent[k] = get<2>(preProcessedData[parent[k - 1]])[k - 1];
-            }
-        }
-    }
-}
-
-int findLCA(const vector<tuple<int, int, vector<int>>>& preProcessedData, const int max_k, int u,  int v)
-{
-    if (get<0>(preProcessedData[u]) < get<0>(preProcessedData[v]))
-    {
-        swap(u, v);
-    }
-
-    for (int k = max_k; k >= 0; k--)
-    {
-        if (get<0>(preProcessedData[u]) - get<0>(preProcessedData[v]) >= (1 << k))
-        {
-            u = get<2>(preProcessedData[u])[k];
-        }
-    }
+    const int depth = tree[index].first;
+    const int left = tree[index].second.second.first;
+    const int right = tree[index].second.second.second;
     
-    if (u == v)
-    {
-        return u;
-    }
-
-    for (int k = max_k; k >= 0; k--)
-    {
-        if (get<2>(preProcessedData[u])[k] != -1 && get<2>(preProcessedData[u])[k] != get<2>(preProcessedData[v])[k])
-        {
-            u = get<2>(preProcessedData[u])[k];
-            v = get<2>(preProcessedData[v])[k];
-        }
-    }
-
-    return get<2>(preProcessedData[u])[0];
+    dfs(tree, widthVec, counter, n, left);
+    widthVec[depth].push_back(++counter);
+    dfs(tree, widthVec, counter, n, right);
 }
 
 int main()
@@ -90,34 +25,88 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m, max_k;
+    int n;
     cin >> n;
-    max_k = static_cast<int>(ceil(log2(n)));
-
-    vector<vector<pair<int, int>>> tree(n + 1);
-
-    for (int i = 1; i <= n - 1; ++i)
-    {
-        int u, v, w;
-        cin >> u >> v >> w;
-
-        tree[u].push_back(make_pair(v, w));
-        tree[v].push_back(make_pair(u, w));
-    }
-
-    cin >> m;
-
-    vector<tuple<int, int, vector<int>>> preProcessedData = preProcess(tree, n, max_k, 1);
-    preProcessBinaryLifting(preProcessedData, n, max_k);
+    vector<pair<int, pair<int, pair<int, int>>>> tree(n + 1);
     
-    for (int i = 1; i <= m; ++i)
+    for (int i = 1; i <= n; ++i)
     {
-        int u, v;
-        cin >> u >> v;
-
-        const int lca = findLCA(preProcessedData, max_k, u, v);
-        cout << get<1>(preProcessedData[u]) + get<1>(preProcessedData[v]) - 2 * get<1>(preProcessedData[lca]) << "\n";
+        int node, left, right;
+        cin >> node >> left >> right;
+        
+        tree[node].second.second.first = left;
+        tree[node].second.second.second = right;
+        
+        if (left != -1)
+        {
+            tree[left].second.first = node;
+        }
+        
+        if (right != -1)
+        {
+            tree[right].second.first = node;
+        }
     }
+
+    int root = 0;
+    for (int i = 1; i <= n; ++i)
+    {
+        if (tree[i].second.first == 0)
+        {
+            root = i;
+            break;
+        }
+    }
+
+    int maxDepth = 0;
+    queue<int> q;
+    tree[root].first = 1;
+    q.push(root);
+
+    while (!q.empty())
+    {
+        const int curr = q.front();
+        q.pop();
+
+        const int depth = tree[curr].first;
+        const int left = tree[curr].second.second.first;
+        const int right = tree[curr].second.second.second;
+
+        maxDepth = max(maxDepth, depth);
+        
+        if (left != -1)
+        {
+            tree[left].first = depth + 1;
+            q.push(left);
+        }
+
+        if (right != -1)
+        {
+            tree[right].first = depth + 1;
+            q.push(right);
+        }
+    }
+
+    vector<vector<int>> widthVec(maxDepth + 1);
+    int counter = 0;
+    dfs(tree, widthVec, counter, n, root);
+
+    pair<int, int> result;
+    for (int i = 1; i <= maxDepth; ++i)
+    {
+        if (widthVec[i].empty())
+        {
+            continue;
+        }
+        
+        if (result.second < widthVec[i].back() - widthVec[i].front() + 1)
+        {
+            result.first = i;
+            result.second = widthVec[i].back() - widthVec[i].front() + 1;
+        }
+    }
+
+    cout << result.first << ' ' << result.second << "\n";
     
     return 0;
 }
