@@ -3,12 +3,30 @@
 #include <vector>
 using namespace std;
 
+class CIndexGenerator
+{
+public:
+    CIndexGenerator() {}
+    ~CIndexGenerator() {}
+
+public:
+    int GetIndex()
+    {
+        int returnIndex = Index++;
+        return returnIndex;
+    }
+
+private:
+    int Index = 0;
+};
+
 class CTile
 {
 public:
     CTile(){}
-    CTile(const int type, const int y, const int x, const bool reverse)
+    CTile(const int index, const int type, const int y, const int x, const bool reverse)
     {
+        Index = index;
         Type = type;
         const int tileTypeIndex = reverse ? 1 : 0;
         TilePosistions.emplace_back(y, x);
@@ -34,6 +52,7 @@ private:
     vector<pair<int, int>> TilePosistions;
     vector<vector<pair<int, int>>> TileTypes = {{{0, 0},{0, 1}, {1, 0} }, {{0, 0},{1, 0}, {0, -1} }};
     int Type = 0;
+    int Index = 0;
 };
 
 class CBoard
@@ -41,10 +60,11 @@ class CBoard
 public:
     CBoard(){}
 
-    CBoard(const int row, const int col)
+    CBoard(const int row, const int col, const bool breverse = false)
+        : Row(row), Col(col), bReverse(breverse)
     {
-        Board = move(vector<vector<int>>(row, vector<int>(col, 0)));
-        HighestHeight = move(vector<int>(col, row - 1));
+        Board = move(vector<vector<int>>(Row, vector<int>(Col, 0)));
+        HighestHeight = move(vector<int>(Col, Row - 1));
     }
 
     ~CBoard(){}
@@ -54,16 +74,22 @@ public:
     {
         vector<pair<int, int>>& tilePositions = tile.GetTilePositions();
         addTileInternal(tilePositions, tile.GetType());
+
+        vector<int> deletedLines;
         
-        vector<int> deletedLines = lineScoreCheck();
-        deleteLines(deletedLines);
-        renewalBlocks(deletedLines);
-
-        if (!deletedLines.empty())
+        do
         {
-            adjustHighestHeight();
-        }
+            deletedLines = lineScoreCheck();
+            deleteLines(deletedLines);
+            renewalBlocks(deletedLines);
 
+            if (!deletedLines.empty())
+            {
+                adjustHighestHeight();
+            }
+        }
+        while (!deletedLines.empty());
+        
         deletedLines = areaCheck();
         deleteLines(deletedLines);
         renewalBlocks(deletedLines);
@@ -76,14 +102,12 @@ public:
 
     int CountBlocks()
     {
-        const int size = static_cast<int>(Board.size());
         int count = 0;
         
-        for (int i = 0; i < size; ++i)
+        for (int i = 0; i < Row; ++i)
         {
             vector<int>& line = Board[i];
-            const int lineSize = static_cast<int>(line.size());
-            for (int j = 0; j < lineSize; j++)
+            for (int j = 0; j < Col; j++)
             {
                 if (line[j] >= 1)
                 {
@@ -126,14 +150,12 @@ private:
     vector<int> lineScoreCheck()
     {
         vector<int> deletedLines;
-        const int size = static_cast<int>(Board.size());
         
-        for (int i = 0; i < size; ++i)
+        for (int i = 0; i < Row; ++i)
         {
             int lineFillCounter = 0;
             vector<int>& line = Board[i];
-            const int lineSize = static_cast<int>(line.size());
-            for (int j = 0; j < lineSize; j++)
+            for (int j = 0; j < Col; j++)
             {
                 if (line[j] >= 1)
                 {
@@ -141,7 +163,7 @@ private:
                 }
             }
 
-            if (lineFillCounter == lineSize)
+            if (lineFillCounter == Col)
             {
                 Score++;
                 deletedLines.push_back(i);
@@ -162,9 +184,8 @@ private:
         for (int i = 0; i < size; ++i)
         {
             vector<int>& line = Board[deletedLines[i]];
-            const int lineSize = static_cast<int>(line.size());
             line.clear();
-            line.resize(lineSize);
+            line.resize(Col);
         }
     }
 
@@ -172,12 +193,10 @@ private:
     {
         vector<int> deletedLines;
         int counter = 0;
-        const int size = static_cast<int>(Board.size());
         for (int i = 0; i <= 1; ++i)
         {
             vector<int>& line = Board[i];
-            const int lineSize = static_cast<int>(line.size());
-            for (int j = 0; j < lineSize; ++j)
+            for (int j = 0; j < Col; ++j)
             {
                 if (line[j] >= 1)
                 {
@@ -189,7 +208,7 @@ private:
 
         for (int i = 0; i < counter; ++i)
         {
-            deletedLines.push_back(size - 1 - i);
+            deletedLines.push_back(Row - 1 - i);
         }
 
         return move(deletedLines);
@@ -203,8 +222,6 @@ private:
         }
 
         sort(deletedLines.begin(), deletedLines.end());
-
-        const int size = static_cast<int>(deletedLines.size());
         
         for (const int deletedLine : deletedLines)
         {
@@ -214,23 +231,25 @@ private:
             }
         }
 
-        const int lineSize = static_cast<int>(Board[0].size());
         Board[0].clear();
-        Board[0].resize(lineSize);
+        Board[0].resize(Col);
         Board[1].clear();
-        Board[1].resize(lineSize);
+        Board[1].resize(Col);
+
+        // 모노미노도미노
+        {
+            int temp = 0;
+        }
     }
 
     void adjustHighestHeight()
     {
         HighestHeight = {5, 5, 5, 5};
-        const int size = static_cast<int>(Board.size());
 
-        for (int i = size - 1; i >= 0; --i)
+        for (int i = Row - 1; i >= 0; --i)
         {
             vector<int>& line = Board[i];
-            const int lineSize = static_cast<int>(line.size());
-            for (int j = 0; j < lineSize; ++j)
+            for (int j = 0; j < Col; ++j)
             {   
                 if (line[j] >= 1)
                 {
@@ -243,6 +262,8 @@ private:
     vector<vector<int>> Board;
     vector<int> HighestHeight;
     int Score = 0;
+    int Row = 0, Col = 0;
+    bool bReverse = false;
 };
 
 int main()
@@ -251,19 +272,23 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    CBoard greenBoard(6, 4), blueBoard(6, 4);
+    CBoard greenBoard(6, 4), blueBoard(6, 4, true);
     int n;
     cin >> n;
+
+    CIndexGenerator indexGenerator;
 
     for (int i = 0; i < n; ++i)
     {
         int t, y, x;
         cin >> t >> y >> x;
 
-        CTile tileForGreen(t, y, x, false);
+        const int newIndex = indexGenerator.GetIndex();
+        
+        CTile tileForGreen(newIndex, t, y, x, false);
         greenBoard.AddTile(tileForGreen);
         
-        CTile tileForBlue(t, x, 4 - 1 - y, true);
+        CTile tileForBlue(newIndex, t, x, 4 - 1 - y, true);
         blueBoard.AddTile(tileForBlue);
     }
 
