@@ -1,14 +1,16 @@
 ﻿#include <algorithm>
 #include <iostream>
+#include <queue>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 using namespace std;
 
 struct TileInfo
 {
     vector<pair<int, int>> TilePositions;
-    int BaseY = 0;
     int Index = 0;
+    int LowestHeight = 0;
 };
 
 class CTileInfoGenerator
@@ -21,12 +23,15 @@ public:
         const int tileTypeIndex = breverse ? 1 : 0;
         const pair<int, int> tileType = TileTypes[tileTypeIndex][type - 1];
         tileInfo.TilePositions.emplace_back(tileBasePos);
+        tileInfo.LowestHeight = tileBasePos.first;
+
         if (type > 1)
         {
             tileInfo.TilePositions.emplace_back(tileBasePos.first + tileType.first,
                                                 tileBasePos.second + tileType.second);
+
+            tileInfo.LowestHeight = max(tileInfo.LowestHeight, tileBasePos.first + tileType.first);
         }
-        tileInfo.BaseY = tileBasePos.first;
         tileInfo.Index = Index++;
         return move(tileInfo);
     }
@@ -39,18 +44,14 @@ private:
 class CTile
 {
 public:
-    CTile()
-    {
-    }
+    CTile(){}
 
     CTile(const TileInfo& tileInfo)
     {
         Info = tileInfo;
     }
 
-    ~CTile()
-    {
-    }
+    ~CTile(){}
 
 public:
     void Move(const vector<int>& highestHeight)
@@ -62,9 +63,17 @@ public:
             maxHeight = min(maxHeight, highestHeight[x]);
         }
 
+        Info.LowestHeight = 0;
+        int originalBasePos = Info.TilePositions[0].first;
         for (auto& tilePosition : Info.TilePositions)
         {
-            tilePosition.first = maxHeight - (tilePosition.first - Info.BaseY);
+            originalBasePos = min(originalBasePos, tilePosition.first);
+        }
+        
+        for (auto& tilePosition : Info.TilePositions)
+        {
+            tilePosition.first = maxHeight - (tilePosition.first - originalBasePos);
+            Info.LowestHeight = max(Info.LowestHeight, tilePosition.first);
         }
     }
 
@@ -72,9 +81,18 @@ public:
     {
         Info.TilePositions.erase(remove(Info.TilePositions.begin(), Info.TilePositions.end(), make_pair(y, x)),
                                  Info.TilePositions.end());
-        int temp = 0;
 
-        return Info.TilePositions.empty();
+        Info.LowestHeight = 0;
+        const bool bisPositionsEmpty = Info.TilePositions.empty();
+        if (!bisPositionsEmpty)
+        {
+            for (const auto& tilePosition : Info.TilePositions)
+            {
+                Info.LowestHeight = max(Info.LowestHeight, tilePosition.first);
+            }
+        }
+        
+        return bisPositionsEmpty;
     }
 
     vector<pair<int, int>> GetTilePositions()
@@ -85,6 +103,11 @@ public:
     int GetIndex()
     {
         return Info.Index;
+    }
+
+    int GetLowestHeight()
+    {
+        return Info.LowestHeight;
     }
 
 private:
@@ -122,22 +145,12 @@ public:
             deletedLines = lineScoreCheck();
             deleteLines(deletedLines);
             renewalBlocks(deletedLines);
-
-            if (!deletedLines.empty())
-            {
-                adjustHighestHeight();
-            }
         }
         while (!deletedLines.empty());
 
         deletedLines = areaCheck();
         deleteLines(deletedLines);
         renewalBlocks(deletedLines);
-
-        if (!deletedLines.empty())
-        {
-            adjustHighestHeight();
-        }
     }
 
     int CountBlocks()
@@ -165,28 +178,6 @@ public:
     }
 
 private:
-    void addTileInternal(const vector<pair<int, int>>& tilePositions, const int type)
-    {
-        int maxHeight = static_cast<int>(1e9);
-        const int size = static_cast<int>(tilePositions.size());
-        for (int i = 0; i < size; i++)
-        {
-            pair<int, int> tilePosition = tilePositions[i];
-            const int x = tilePosition.second;
-            const int y = HighestHeight[x];
-            maxHeight = min(y, maxHeight);
-        }
-
-        for (int i = 0; i < size; i++)
-        {
-            pair<int, int> tilePosition = tilePositions[i];
-            const int x = tilePosition.second;
-            const int y = maxHeight - tilePosition.first;
-            Board[y][x] = type;
-            HighestHeight[x] = y - 1;
-        }
-    }
-
     void addTileInternal(shared_ptr<CTile> tile)
     {
         tile->Move(HighestHeight);
@@ -288,86 +279,36 @@ private:
         }
 
         HighestHeight = {Row - 1, Row - 1, Row - 1, Row - 1,};
-        // for (int i = Row - 1; i >= 0; --i)
-        // {
-        //     vector<int>& line = Board[i];
-        //     for (int j = 0; j < Col; ++j)
-        //     {   
-        //         if (line[j] == 0)
-        //         {
-        //             HighestHeight[j] = i;
-        //             continue;
-        //         }
-        //     }
-        // }
 
-        for (int j = 0; j < Col; ++j)
+        priority_queue<pair<int, shared_ptr<CTile>>> pq;
+
+        for (pair<const int, shared_ptr<CTile>>& tilePair : Tiles)
         {
-            for (int i = Row - 1; i >= 0; --i)
-            {
-                vector<int>& line = Board[i];
-
-                if (line[j] == 0)
-                {
-                    HighestHeight[j] = i;
-                    break;
-                }
-            }
+            shared_ptr<CTile> tile = tilePair.second;
+            pq.push({tile->GetLowestHeight(), tile});
         }
 
-        sort(deletedLines.begin(), deletedLines.end());
-
-        for (const int deletedLine : deletedLines)
+        while (!pq.empty())
         {
-            for (int i = deletedLine; i >= 1; --i)
+            auto& curr = pq.top();
+            shared_ptr<CTile> tile = curr.second;
+            pq.pop();
+
+            for (pair<int, int>& tilePos : tile->GetTilePositions())
             {
-                Board[i] = Board[i - 1];
+                const int y = tilePos.first;
+                const int x = tilePos.second;
+                Board[y][x] = 0;
             }
-        }
 
-        Board[0].clear();
-        Board[0].resize(Col);
-        Board[1].clear();
-        Board[1].resize(Col);
+            tile->Move(HighestHeight);
 
-        // 모노미노도미노
-        // {
-        //     for (pair<const int, shared_ptr<CTile>>& tilePair : Tiles)
-        //     {
-        //         shared_ptr<CTile> tile = tilePair.second;
-        //         for (pair<int, int>& tilePos : tile->GetTilePositions())
-        //         {
-        //             const int y = tilePos.first;
-        //             const int x = tilePos.second;
-        //             Board[y][x] = 0;
-        //         }
-        //         
-        //         tile->Move(HighestHeight);
-        //
-        //         for (pair<int, int>& tilePos : tile->GetTilePositions())
-        //         {
-        //             const int y = tilePos.first;
-        //             const int x = tilePos.second;
-        //             Board[y][x] = tile->GetIndex();
-        //         }
-        //     }
-        // }
-    }
-
-    void adjustHighestHeight()
-    {
-        HighestHeight = {Row - 1, Row - 1, Row - 1, Row - 1,};
-
-        for (int i = 0; i < Row; ++i)
-        {
-            vector<int>& line = Board[i];
-            for (int j = 0; j < Col; ++j)
+            for (pair<int, int>& tilePos : tile->GetTilePositions())
             {
-                if (line[j] >= 1)
-                {
-                    HighestHeight[j] = i - 1;
-                    continue;
-                }
+                const int y = tilePos.first;
+                const int x = tilePos.second;
+                Board[y][x] = tile->GetIndex();
+                HighestHeight[x] = y - 1;
             }
         }
     }
