@@ -10,6 +10,7 @@ struct TileInfo
 {
     vector<pair<int, int>> TilePositions;
     int Index = 0;
+    int HighestHeight = 0;
     int LowestHeight = 0;
 };
 
@@ -62,18 +63,20 @@ public:
             const int x = tilePos.second;
             maxHeight = min(maxHeight, highestHeight[x]);
         }
-
-        Info.LowestHeight = 0;
+        
         int originalBasePos = Info.TilePositions[0].first;
         for (auto& tilePosition : Info.TilePositions)
         {
             originalBasePos = min(originalBasePos, tilePosition.first);
         }
-        
+
+        Info.LowestHeight = 0;
+        Info.HighestHeight = static_cast<int>(1e9);
         for (auto& tilePosition : Info.TilePositions)
         {
             tilePosition.first = maxHeight - (tilePosition.first - originalBasePos);
             Info.LowestHeight = max(Info.LowestHeight, tilePosition.first);
+            Info.HighestHeight = min(Info.HighestHeight, tilePosition.first);
         }
     }
 
@@ -110,6 +113,11 @@ public:
         return Info.LowestHeight;
     }
 
+    int GetHighestHeight()
+    {
+        return Info.HighestHeight;
+    }
+
 private:
     TileInfo Info;
 };
@@ -139,7 +147,7 @@ public:
         addTileInternal(tile);
 
         vector<int> deletedLines;
-
+        
         do
         {
             deletedLines = lineScoreCheck();
@@ -180,6 +188,11 @@ public:
 private:
     void addTileInternal(shared_ptr<CTile> tile)
     {
+        if (tile->GetIndex() == 11)
+        {
+            int temp = 0;
+        }
+        
         tile->Move(HighestHeight);
         const vector<pair<int, int>> tilePositions = tile->GetTilePositions();
         const int index = tile->GetIndex();
@@ -189,7 +202,7 @@ private:
             const int y = tilePosition.first;
             const int x = tilePosition.second;
             Board[y][x] = index;
-            HighestHeight[x] = y - 1;
+            HighestHeight[x] = tile->GetHighestHeight() - 1;
         }
     }
 
@@ -308,7 +321,7 @@ private:
                 const int y = tilePos.first;
                 const int x = tilePos.second;
                 Board[y][x] = tile->GetIndex();
-                HighestHeight[x] = y - 1;
+                HighestHeight[x] = tile->GetHighestHeight() - 1;
             }
         }
     }
