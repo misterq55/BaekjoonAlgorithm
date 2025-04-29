@@ -2,24 +2,36 @@
 #include <vector>
 using namespace std;
 
-bool isPromising(vector<int>& row, int n)
+void printResult(const vector<int>& result)
 {
-    for (int i = 0; i < n; ++i)
+    for (const auto& num : result)
     {
-        
+        cout << num << " ";
     }
+
+    cout << "\n";
 }
 
-void NQueen(vector<vector<int>>& field, int n, int level, int pos, int& count)
+void backTracking(const vector<int>& nums, vector<int>& result, const int size, const int m, const int level, const int num)
 {
-    if (level == n)
+    if (level == m - 1)
     {
-        count++;   
+        printResult(result);
+        return;
     }
-
-    for (int i = 0; i < n; ++i)
+    
+    const int nextLevel = level + 1;
+    
+    for (int i = 0; i < size; ++i)
     {
+        if (nums[i] < num)
+        {
+            continue;
+        }
         
+        result.emplace_back(nums[i]);
+        backTracking(nums, result, size, m, nextLevel, nums[i]);
+        result.pop_back();
     }
 }
 
@@ -29,11 +41,18 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n;
-    cin >> n;
+    int n, m;
+    cin >> n >> m;
 
-    vector<vector<int>> field(n, vector<int>(n, 0));
-    int count = 0;
-    
+    vector<int> nums;
+    vector<int> result;
+
+    for (int i = 1; i <= n; ++i)
+    {
+        nums.push_back(i);
+    }
+
+    backTracking(nums, result, n, m, -1, 0);
+
     return 0;
 }
