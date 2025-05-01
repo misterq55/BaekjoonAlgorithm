@@ -1,82 +1,31 @@
-﻿#include <iostream>
+﻿#include <algorithm>
+#include <iostream>
+#include <queue>
 #include <vector>
 using namespace std;
 
-bool isValid(const string& str)
+struct GraphCompare
 {
-    const int size = static_cast<int>(str.size());
-    if (size == 0)
+    bool operator()(const vector<int>& p1, const vector<int>& p2)
     {
-        return false;
+        return p1.size() > p2.size();
     }
+};
 
-    if (str[0] >= 'A' && str[0] <= 'Z' || str[0] == '_')
+int dfs(vector<pair<int, vector<int>>>& graph, vector<bool>& visited, const int index)
+{
+    visited[index] = true;
+    graph[index].first = 1;
+    
+    for (const auto& v : graph[index].second)
     {
-        return false;
-    }
-
-    const int lastIndex = size - 1;
-    if (str[lastIndex] == '_')
-    {
-        return false;
-    }
-
-    int underBarCount = 0;
-    int upperCaseCount = 0;
-
-    for (int i = 0; i < size; ++i)
-    {
-        if (str[i] >= 'A' && str[i] <= 'Z')
+        if (!visited[v])
         {
-            ++upperCaseCount;
-        }
-
-        if (str[i] == '_')
-        {
-            if (str[i + 1] == '_')
-            {
-                return false;
-            }
-            
-            ++underBarCount;
+            graph[index].first += dfs(graph, visited, v);
         }
     }
 
-    if (underBarCount > 0 && upperCaseCount > 0)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool isParsingPoint(const bool isJava, const char ch)
-{
-    if (isJava)
-    {
-        return ch == '_';
-    }
-
-    return ch >= 'A' && ch <= 'Z';
-}
-
-void correctParsedStr(const bool isJava, string& parsedStr)
-{
-    if (isJava)
-    {
-        parsedStr.erase(0, 1);
-        parsedStr[0] -= ('a' - 'A');
-    }
-    else
-    {
-        parsedStr[0] += ('a' - 'A');
-        parsedStr = "_" + parsedStr;
-    }
-}
-
-void parsingString(const string str, vector<string>& parsedStr, const int offset, const int size)
-{
-    parsedStr.push_back(str.substr(offset, size));
+    return graph[index].first;
 }
 
 int main()
@@ -85,48 +34,36 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    string s;
-    cin >> s;
+    int n, m;
+    cin >> n >> m;
 
-    if (!isValid(s))
+    vector<pair<int, vector<int>>> graph(n + 1);
+    vector<int> result(n + 1);
+
+    for (int i = 0; i < m; ++i)
     {
-        cout << "Error!" << "\n";
-        return 0;
+        int u, v;
+        cin >> u >> v;
+        graph[v].second.push_back(u);
     }
 
-    const bool bisJava = s.find("_") != string::npos;
-
-    vector<string> parsedStr;
-
-    const int size = static_cast<int>(s.length());
-    int prevIndex = 0;
-    for (int i = 0; i < size; ++i)
+    int maxValue = 0;
+    for (int i = 1; i <= n; ++i)
     {
-        const char ch = s[i];
-        
-        if (isParsingPoint(bisJava, ch))
+        vector<bool> visited(n + 1, false);
+        result[i] = dfs(graph, visited, i);
+        maxValue = max(maxValue, result[i]);
+    }
+
+    for (int i = 1; i <= n; ++i)
+    {
+        if (result[i] == maxValue)
         {
-            parsingString(s, parsedStr, prevIndex, i - prevIndex);
-            prevIndex = i;
+            cout << i << " ";
         }
     }
 
-    parsingString(s, parsedStr, prevIndex, size - prevIndex);
-
-    const int parsedSize = static_cast<int>(parsedStr.size());
-
-    for (int i = 1; i < parsedSize; ++i)
-    {
-        correctParsedStr(bisJava, parsedStr[i]);
-    }
-
-    string ans;
-    for (int i = 0; i < parsedSize; ++i)
-    {
-        ans += parsedStr[i];
-    }
-
-    cout << ans << "\n";
+    cout << "\n";
     
     return 0;
 }
