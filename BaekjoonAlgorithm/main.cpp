@@ -1,32 +1,8 @@
 ﻿#include <algorithm>
 #include <iostream>
-#include <queue>
+#include <tuple>
 #include <vector>
 using namespace std;
-
-struct GraphCompare
-{
-    bool operator()(const vector<int>& p1, const vector<int>& p2)
-    {
-        return p1.size() > p2.size();
-    }
-};
-
-int dfs(vector<pair<int, vector<int>>>& graph, vector<bool>& visited, const int index)
-{
-    visited[index] = true;
-    graph[index].first = 1;
-    
-    for (const auto& v : graph[index].second)
-    {
-        if (!visited[v])
-        {
-            graph[index].first += dfs(graph, visited, v);
-        }
-    }
-
-    return graph[index].first;
-}
 
 int main()
 {
@@ -34,36 +10,31 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m;
-    cin >> n >> m;
+    int n;
+    cin >> n;
 
-    vector<pair<int, vector<int>>> graph(n + 1);
-    vector<int> result(n + 1);
-
-    for (int i = 0; i < m; ++i)
-    {
-        int u, v;
-        cin >> u >> v;
-        graph[v].second.push_back(u);
-    }
-
-    int maxValue = 0;
-    for (int i = 1; i <= n; ++i)
-    {
-        vector<bool> visited(n + 1, false);
-        result[i] = dfs(graph, visited, i);
-        maxValue = max(maxValue, result[i]);
-    }
+    vector<int> r(n + 1, 0);
+    vector<int> g(n + 1, 0);
+    vector<int> b(n + 1, 0);
+    vector<vector<int>> dp(n + 1, vector<int>(3 + 1, 0));
 
     for (int i = 1; i <= n; ++i)
     {
-        if (result[i] == maxValue)
-        {
-            cout << i << " ";
-        }
+        cin >> r[i] >> g[i] >> b[i];
+    }
+    
+    dp[1][1] = r[1];
+    dp[1][2] = g[1];
+    dp[1][3] = b[1];
+    
+    for (int i = 2; i <= n; i++)
+    {
+        dp[i][1] = r[i] + min(dp[i - 1][2], dp[i - 1][3]);
+        dp[i][2] = g[i] + min(dp[i - 1][1], dp[i - 1][3]);
+        dp[i][3] = b[i] + min(dp[i - 1][1], dp[i - 1][2]);
     }
 
-    cout << "\n";
+    cout << min(min(dp[n][1], dp[n][2]), dp[n][3]) << "\n";
     
     return 0;
 }
