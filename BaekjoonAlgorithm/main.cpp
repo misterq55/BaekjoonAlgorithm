@@ -1,33 +1,55 @@
-﻿#include <iostream>
+﻿#include <algorithm>
+#include <iostream>
 #include <vector>
 using namespace std;
 
-void BackTrack(const vector<int>& cards, vector<bool>& visited, const int maxCardNum, const int maxNum, const int level, int& sum, int& ans)
+bool IsValid(const vector<char>& result)
 {
-    if (sum > maxNum)
-    {
-        return;
-    }
+    int vowels = 0;
+    int consonants = 0;
     
-    if (level == maxCardNum)
+    for (const char& c : result)
     {
-        ans = max(sum, ans);
-        return;
-    }
-    
-    const int size = static_cast<int>(cards.size());
-    for (int i = 0; i < size; ++i)
-    {
-        if (visited[i])
+        if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u')
         {
-            continue;
+            ++vowels;
+        }
+        else
+        {
+            ++consonants;
+        }
+    }
+
+    return vowels >= 1 && consonants >= 2;
+}
+
+void PrintResult(const vector<char>& result)
+{
+    for (const char& c : result)
+    {
+        cout << c;
+    }
+    
+    cout << "\n";
+}
+
+void BackTrack(const vector<char>& passwords, vector<char>& result, const int c, const int& l, const int level, const int start)
+{
+    if (l == level)
+    {
+        if (IsValid(result))
+        {
+            PrintResult(result);
         }
         
-        visited[i] = true;
-        sum += cards[i];
-        BackTrack(cards, visited, maxCardNum, maxNum, level + 1, sum, ans);
-        sum -= cards[i];
-        visited[i] = false;
+        return;
+    }
+
+    for (int i = start; i < c; i++)
+    {
+        result.push_back(passwords[i]);
+        BackTrack(passwords, result, c, l, level + 1, i + 1);
+        result.pop_back();
     }
 }
 
@@ -37,24 +59,21 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m;
-    cin >> n >> m;
+    int l, c;
+    cin >> l >> c;
 
-    vector<int> cards(n);
-    
-    int maxCardNum = 3;
+    vector<char> passwords(c);
+    vector<bool> visited(c);
+    vector<char> result;
 
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < c; ++i)
     {
-        cin >> cards[i];
+        cin >> passwords[i];
     }
 
-    int sum = 0;
-    int ans = 0;
-    vector<bool> visited(n , false);
-    BackTrack(cards, visited, maxCardNum, m, 0, sum, ans);
+    sort(passwords.begin(), passwords.end());
 
-    cout << ans << "\n";
+    BackTrack(passwords, result, c, l, 0, 0);
     
     return 0;
 }
