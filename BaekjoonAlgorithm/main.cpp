@@ -1,55 +1,65 @@
-﻿#include <algorithm>
+﻿#include <limits>
 #include <iostream>
 #include <vector>
 using namespace std;
 
-bool IsValid(const vector<char>& result)
+int CaculateSum(const vector<vector<int>>& field, const vector<int>& nums)
 {
-    int vowels = 0;
-    int consonants = 0;
-    
-    for (const char& c : result)
+    int sum = 0;
+
+    const int numsSize = static_cast<int>(nums.size());
+
+    for (int i = 0; i < numsSize; ++i)
     {
-        if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u')
+        for (int j = i + 1; j < numsSize; ++j)
         {
-            ++vowels;
-        }
-        else
-        {
-            ++consonants;
+            const int y = nums[i];
+            const int x = nums[j];
+            sum += (field[y][x] + field[x][y]);
         }
     }
 
-    return vowels >= 1 && consonants >= 2;
+    return sum;
 }
 
-void PrintResult(const vector<char>& result)
+void BackTrack(const vector<vector<int>>& field, vector<int>& start, vector<int>& link, vector<bool>& visited, const int maxLevel, int& minDifference, const int startIdx)
 {
-    for (const char& c : result)
-    {
-        cout << c;
-    }
+    const int size = static_cast<int>(field.size()) - 2;
     
-    cout << "\n";
-}
-
-void BackTrack(const vector<char>& passwords, vector<char>& result, const int c, const int& l, const int level, const int start)
-{
-    if (l == level)
+    if (static_cast<int>(start.size()) == maxLevel)
     {
-        if (IsValid(result))
+        const int startSum = CaculateSum(field, start);
+
+        for (int i = 1; i <= size; ++i)
         {
-            PrintResult(result);
+            if (!visited[i])
+            {
+                link.push_back(i);
+            }
         }
         
+        const int linkSum = CaculateSum(field, link);
+        link.clear();
+        
+        minDifference = min(minDifference, abs(linkSum - startSum));
+
         return;
     }
 
-    for (int i = start; i < c; i++)
+    for (int i = startIdx; i <= size; ++i)
     {
-        result.push_back(passwords[i]);
-        BackTrack(passwords, result, c, l, level + 1, i + 1);
-        result.pop_back();
+        if (visited[i])
+        {
+            continue;
+        }
+
+        visited[i] = true;
+        start.push_back(i);
+
+        BackTrack(field, start, link, visited, maxLevel, minDifference, i + 1);
+        
+        start.pop_back();
+        visited[i] = false;
     }
 }
 
@@ -59,21 +69,29 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int l, c;
-    cin >> l >> c;
+    int n;
+    cin >> n;
 
-    vector<char> passwords(c);
-    vector<bool> visited(c);
-    vector<char> result;
+    vector<vector<int>> field(n + 2, vector<int>(n + 2, -1));
+    vector<bool> visited(n + 1, false);
 
-    for (int i = 0; i < c; ++i)
+    const int maxLevel = n / 2;
+    vector<int> start;
+    vector<int> link;
+    
+    for (int i = 1; i <= n; ++i)
     {
-        cin >> passwords[i];
+        for (int j = 1; j <= n; ++j)
+        {
+            cin >> field[i][j];
+        }
     }
 
-    sort(passwords.begin(), passwords.end());
+    int minDifference = static_cast<int>(std::numeric_limits<int>::max());
 
-    BackTrack(passwords, result, c, l, 0, 0);
+    BackTrack(field, start, link, visited, maxLevel, minDifference, 1);
+
+    cout << minDifference << "\n";
     
     return 0;
 }
