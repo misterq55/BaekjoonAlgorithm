@@ -5,26 +5,106 @@
 #include <algorithm>
 using namespace std;
 
-void BackTrack(vector<vector<int>>& combination, vector<int>& indexes, vector<bool>& visited, const int maxLevel, const int level, const int start)
+class CEgg
 {
-    if (level == maxLevel)
+public:
+    CEgg() {}
+    CEgg(const int durability, const int weight)
+        : Durability(durability), Weight(weight)
+    {}
+    ~CEgg() {}
+
+public:
+    bool IsBroken() const { return bIsBroken; }
+
+    friend void CrashEggs(CEgg&, CEgg& );
+    friend void RestoreEggs(CEgg&, CEgg& );
+
+private:
+    int Durability = 0;
+    int Weight = 0;
+    bool bIsBroken = false;
+};
+
+void CrashEggs(CEgg& egg1, CEgg& egg2)
+{
+    egg1.Durability -= egg2.Weight;
+    egg2.Durability -= egg1.Weight;
+
+    if (egg1.Durability <= 0)
     {
-        combination.push_back(indexes);
+        egg1.bIsBroken = true;
+    }
+
+    if (egg2.Durability <= 0)
+    {
+        egg2.bIsBroken = true;
+    }
+}
+
+void RestoreEggs(CEgg& egg1, CEgg& egg2)
+{
+    egg1.Durability += egg2.Weight;
+    egg2.Durability += egg1.Weight;
+
+    if (egg1.Durability > 0)
+    {
+        egg1.bIsBroken = false;
+    }
+
+    if (egg2.Durability > 0)
+    {
+        egg2.bIsBroken = false;
+    }
+}
+
+int CalcCounter(const vector<CEgg>& eggs)
+{
+    int counter = 0;
+    for (const CEgg& egg : eggs)
+    {
+        if (egg.IsBroken())
+        {
+            counter++;
+        }
+    }
+    
+    return counter;
+}
+
+void BackTrack(vector<CEgg>& eggs, const int maxLevel, int& count, const int index)
+{
+    if (index == maxLevel)
+    {
+        count = max(count, CalcCounter(eggs));
+        
         return;
     }
 
-    for (int i = start; i < 25; ++i)
+    if (eggs[index].IsBroken())
     {
-        if (visited[i])
+        return BackTrack(eggs, maxLevel, count, index + 1);
+    }
+
+    bool hasTarget = false;
+    
+    for (int i = 0; i < maxLevel; ++i)
+    {
+        if (index == i || eggs[i].IsBroken())
         {
             continue;
         }
 
-        visited[i] = true;
-        indexes.push_back(i);
-        BackTrack(combination, indexes, visited, maxLevel, level + 1, i + 1);
-        indexes.pop_back();
-        visited[i] = false;
+        hasTarget = true;
+        
+        CrashEggs(eggs[index], eggs[i]);
+        BackTrack(eggs, maxLevel, count, index + 1);
+        RestoreEggs(eggs[index], eggs[i]);
+    }
+
+    if (!hasTarget)
+    {
+        return BackTrack(eggs, maxLevel, count, index + 1);
     }
 }
 
@@ -34,83 +114,23 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    const int n = 5;
+    int n;
+    cin >> n;
 
-    vector<vector<char>> field(n + 2, vector<char>(n + 2, ' '));
-    // vector<vector<bool>> visited(n + 2, vector<bool>(n + 2, false));
-    vector<char> result;
-
-    vector<int> indexes;
-    vector<bool> visted(n * n, false);
-
-    vector<vector<int>> combination;
-    const int maxLevel = 7;
+    vector<CEgg> eggs;
     
-    for (int i = 1; i <= n; ++i)
+    for (int i = 0; i < n; i++)
     {
-        for (int j = 1; j <= n; ++j)
-        {
-            cin >> field[i][j];
-        }
+        int s, w;
+        cin >> s >> w;
+        
+        eggs.emplace_back(s, w);
     }
 
     int count = 0;
 
-    vector<pair<int, int>> directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-    
-    BackTrack(combination, indexes, visted, maxLevel, 0, 0);
-    for (const auto& v : combination)
-    {
-        unordered_map<int, bool> indexVisited;
+    BackTrack(eggs, n, count, 0);
 
-        queue<int> q;
-        q.push(v[0]);
-        indexVisited[v[0]] = true;
-
-        int sCount = 0;
-        while (!q.empty())
-        {
-            const int curr = q.front();
-            q.pop();
-
-            const int y = curr / n + 1;
-            const int x = curr % n + 1;
-
-            if (field[y][x] == 'S')
-            {
-                sCount++;
-            }
-
-            for (const auto& direction : directions)
-            {
-                const int ny = y + direction.first;
-                const int nx = x + direction.second;
-
-                if (field[ny][nx] == ' ')
-                {
-                    continue;
-                }
-                
-                const int adj = (ny - 1) * n + nx - 1;
-                if (find(v.begin(), v.end(), adj) == v.end())
-                {
-                    continue;    
-                }
-                
-                if (!indexVisited[adj])
-                {
-                    indexVisited[adj] = true;
-                    q.push(adj);
-                }
-            }
-        }
-
-        if (indexVisited.size() == 7 && sCount >= 4)
-        {
-            count++;
-        }
-    }
-    
     cout << count << "\n";
     
     return 0;
