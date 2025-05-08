@@ -1,52 +1,29 @@
-﻿#include <limits>
-#include <iostream>
+﻿#include <iostream>
 #include <vector>
 using namespace std;
 
-int CaculateSum(const vector<vector<int>>& field, const vector<int>& nums)
+void PrintResult(const vector<int>& result)
 {
-    int sum = 0;
-
-    const int numsSize = static_cast<int>(nums.size());
-
-    for (int i = 0; i < numsSize; ++i)
+    for (const auto& num : result)
     {
-        for (int j = i + 1; j < numsSize; ++j)
-        {
-            const int y = nums[i];
-            const int x = nums[j];
-            sum += (field[y][x] + field[x][y]);
-        }
+        cout << num << " ";
     }
 
-    return sum;
+    cout << "\n";
 }
 
-void BackTrack(const vector<vector<int>>& field, vector<int>& start, vector<int>& link, vector<bool>& visited, const int maxLevel, int& minDifference, const int startIdx)
+void BackTrack(const vector<int>& nums, vector<bool>& visited, vector<int>& result, const int maxLevel, const int level, const int start)
 {
-    const int size = static_cast<int>(field.size()) - 2;
-    
-    if (static_cast<int>(start.size()) == maxLevel)
+    if (level == maxLevel)
     {
-        const int startSum = CaculateSum(field, start);
-
-        for (int i = 1; i <= size; ++i)
-        {
-            if (!visited[i])
-            {
-                link.push_back(i);
-            }
-        }
+        PrintResult(result);
         
-        const int linkSum = CaculateSum(field, link);
-        link.clear();
-        
-        minDifference = min(minDifference, abs(linkSum - startSum));
-
         return;
     }
 
-    for (int i = startIdx; i <= size; ++i)
+    const int size = static_cast<int>(nums.size());
+
+    for (int i = start; i < size; ++i)
     {
         if (visited[i])
         {
@@ -54,11 +31,9 @@ void BackTrack(const vector<vector<int>>& field, vector<int>& start, vector<int>
         }
 
         visited[i] = true;
-        start.push_back(i);
-
-        BackTrack(field, start, link, visited, maxLevel, minDifference, i + 1);
-        
-        start.pop_back();
+        result.emplace_back(nums[i]);
+        BackTrack(nums, visited, result, maxLevel, level + 1, i + 1);
+        result.pop_back();
         visited[i] = false;
     }
 }
@@ -69,29 +44,30 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n;
-    cin >> n;
-
-    vector<vector<int>> field(n + 2, vector<int>(n + 2, -1));
-    vector<bool> visited(n + 1, false);
-
-    const int maxLevel = n / 2;
-    vector<int> start;
-    vector<int> link;
+    const int maxLevel = 6;
     
-    for (int i = 1; i <= n; ++i)
+    while (true)
     {
-        for (int j = 1; j <= n; ++j)
+        int n;
+        cin >> n;
+
+        if (n == 0)
         {
-            cin >> field[i][j];
+            break;
         }
+
+        vector<int> nums(n);
+        vector<int> result;
+        vector<bool> visited(n, false);
+        
+        for (int i = 0; i < n; ++i)
+        {
+            cin >> nums[i];
+        }
+        
+        BackTrack(nums, visited, result, maxLevel, 0, 0);
+        cout << "\n";
     }
-
-    int minDifference = static_cast<int>(std::numeric_limits<int>::max());
-
-    BackTrack(field, start, link, visited, maxLevel, minDifference, 1);
-
-    cout << minDifference << "\n";
     
     return 0;
 }
