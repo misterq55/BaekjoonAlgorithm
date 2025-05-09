@@ -1,110 +1,25 @@
 ﻿#include <iostream>
-#include <queue>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
 using namespace std;
 
-class CEgg
+void BackTrack(const vector<int>& romanNums, unordered_map<int, bool>& visited, const int maxLevel, const int level, const int num, const int start, int& count)
 {
-public:
-    CEgg() {}
-    CEgg(const int durability, const int weight)
-        : Durability(durability), Weight(weight)
-    {}
-    ~CEgg() {}
-
-public:
-    bool IsBroken() const { return bIsBroken; }
-
-    friend void CrashEggs(CEgg&, CEgg& );
-    friend void RestoreEggs(CEgg&, CEgg& );
-
-private:
-    int Durability = 0;
-    int Weight = 0;
-    bool bIsBroken = false;
-};
-
-void CrashEggs(CEgg& egg1, CEgg& egg2)
-{
-    egg1.Durability -= egg2.Weight;
-    egg2.Durability -= egg1.Weight;
-
-    if (egg1.Durability <= 0)
+    if (level == maxLevel)
     {
-        egg1.bIsBroken = true;
-    }
-
-    if (egg2.Durability <= 0)
-    {
-        egg2.bIsBroken = true;
-    }
-}
-
-void RestoreEggs(CEgg& egg1, CEgg& egg2)
-{
-    egg1.Durability += egg2.Weight;
-    egg2.Durability += egg1.Weight;
-
-    if (egg1.Durability > 0)
-    {
-        egg1.bIsBroken = false;
-    }
-
-    if (egg2.Durability > 0)
-    {
-        egg2.bIsBroken = false;
-    }
-}
-
-int CalcCounter(const vector<CEgg>& eggs)
-{
-    int counter = 0;
-    for (const CEgg& egg : eggs)
-    {
-        if (egg.IsBroken())
+        if (!visited[num])
         {
-            counter++;
+            count++;
+            visited[num] = true;
         }
-    }
-    
-    return counter;
-}
-
-void BackTrack(vector<CEgg>& eggs, const int maxLevel, int& count, const int index)
-{
-    if (index == maxLevel)
-    {
-        count = max(count, CalcCounter(eggs));
         
         return;
     }
 
-    if (eggs[index].IsBroken())
+    for (int i = start; i < 4; ++i)
     {
-        return BackTrack(eggs, maxLevel, count, index + 1);
-    }
-
-    bool hasTarget = false;
-    
-    for (int i = 0; i < maxLevel; ++i)
-    {
-        if (index == i || eggs[i].IsBroken())
-        {
-            continue;
-        }
-
-        hasTarget = true;
-        
-        CrashEggs(eggs[index], eggs[i]);
-        BackTrack(eggs, maxLevel, count, index + 1);
-        RestoreEggs(eggs[index], eggs[i]);
-    }
-
-    if (!hasTarget)
-    {
-        return BackTrack(eggs, maxLevel, count, index + 1);
+        const int sum = num + romanNums[i];
+        BackTrack(romanNums, visited, maxLevel, level + 1, sum, i, count);
     }
 }
 
@@ -117,19 +32,11 @@ int main()
     int n;
     cin >> n;
 
-    vector<CEgg> eggs;
-    
-    for (int i = 0; i < n; i++)
-    {
-        int s, w;
-        cin >> s >> w;
-        
-        eggs.emplace_back(s, w);
-    }
+    vector<int> romanNums = {1, 5, 10, 50};
+    unordered_map<int, bool> visited;
 
     int count = 0;
-
-    BackTrack(eggs, n, count, 0);
+    BackTrack(romanNums, visited, n, 0, 0, 0, count);
 
     cout << count << "\n";
     
