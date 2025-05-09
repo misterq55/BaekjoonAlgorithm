@@ -1,25 +1,28 @@
 ﻿#include <iostream>
-#include <unordered_map>
+#include <string>
 #include <vector>
 using namespace std;
 
-void BackTrack(const vector<int>& romanNums, unordered_map<int, bool>& visited, const int maxLevel, const int level, const int num, const int start, int& count)
+void BackTrack(vector<string>& equations, string& equation, const int targetNum, int& sum)
 {
-    if (level == maxLevel)
+    if (targetNum <= sum)
     {
-        if (!visited[num])
+        if (targetNum == sum)
         {
-            count++;
-            visited[num] = true;
+            equations.push_back(equation);
         }
         
         return;
     }
 
-    for (int i = start; i < 4; ++i)
+    for (int i = 1; i <= 3; ++i)
     {
-        const int sum = num + romanNums[i];
-        BackTrack(romanNums, visited, maxLevel, level + 1, sum, i, count);
+        equation += (sum == 0 ? "" : "+") + to_string(i);
+        sum += i;
+        BackTrack(equations, equation, targetNum, sum);
+        sum -= i;
+        if (sum != 0) equation.pop_back();
+        equation.pop_back();
     }
 }
 
@@ -29,16 +32,25 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n;
-    cin >> n;
+    int n, k;
+    cin >> n >> k;
 
-    vector<int> romanNums = {1, 5, 10, 50};
-    unordered_map<int, bool> visited;
+    vector<string> equations;
+    string equation;
 
-    int count = 0;
-    BackTrack(romanNums, visited, n, 0, 0, 0, count);
+    int sum = 0;
 
-    cout << count << "\n";
+    BackTrack(equations, equation, n, sum);
+
+    const int size = static_cast<int>(equations.size());
+    if (size < k)
+    {
+        cout << -1 << "\n";
+    }
+    else
+    {
+        cout << equations[k - 1] << "\n";
+    }
     
     return 0;
 }
