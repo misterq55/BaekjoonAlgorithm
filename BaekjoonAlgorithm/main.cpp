@@ -1,110 +1,65 @@
 ﻿#include <iostream>
-#include <queue>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
 using namespace std;
 
-class CEgg
+void BackTrack(vector<long long> nums, unordered_map<long long, long long>& ops, long long& maxValue, long long& minValue)
 {
-public:
-    CEgg() {}
-    CEgg(const int durability, const int weight)
-        : Durability(durability), Weight(weight)
-    {}
-    ~CEgg() {}
-
-public:
-    bool IsBroken() const { return bIsBroken; }
-
-    friend void CrashEggs(CEgg&, CEgg& );
-    friend void RestoreEggs(CEgg&, CEgg& );
-
-private:
-    int Durability = 0;
-    int Weight = 0;
-    bool bIsBroken = false;
-};
-
-void CrashEggs(CEgg& egg1, CEgg& egg2)
-{
-    egg1.Durability -= egg2.Weight;
-    egg2.Durability -= egg1.Weight;
-
-    if (egg1.Durability <= 0)
+    if (nums.size() == 1)
     {
-        egg1.bIsBroken = true;
-    }
+        maxValue = max(nums[0], maxValue);
+        minValue = min(nums[0], minValue);
 
-    if (egg2.Durability <= 0)
-    {
-        egg2.bIsBroken = true;
-    }
-}
-
-void RestoreEggs(CEgg& egg1, CEgg& egg2)
-{
-    egg1.Durability += egg2.Weight;
-    egg2.Durability += egg1.Weight;
-
-    if (egg1.Durability > 0)
-    {
-        egg1.bIsBroken = false;
-    }
-
-    if (egg2.Durability > 0)
-    {
-        egg2.bIsBroken = false;
-    }
-}
-
-int CalcCounter(const vector<CEgg>& eggs)
-{
-    int counter = 0;
-    for (const CEgg& egg : eggs)
-    {
-        if (egg.IsBroken())
-        {
-            counter++;
-        }
-    }
-    
-    return counter;
-}
-
-void BackTrack(vector<CEgg>& eggs, const int maxLevel, int& count, const int index)
-{
-    if (index == maxLevel)
-    {
-        count = max(count, CalcCounter(eggs));
-        
         return;
     }
 
-    if (eggs[index].IsBroken())
+    const long long opSize = static_cast<long long>(ops.size());
+    for (long long i = 0; i < opSize; ++i)
     {
-        return BackTrack(eggs, maxLevel, count, index + 1);
-    }
-
-    bool hasTarget = false;
-    
-    for (int i = 0; i < maxLevel; ++i)
-    {
-        if (index == i || eggs[i].IsBroken())
+        long long& op = ops[i];
+        if (op == 0)
         {
             continue;
         }
 
-        hasTarget = true;
-        
-        CrashEggs(eggs[index], eggs[i]);
-        BackTrack(eggs, maxLevel, count, index + 1);
-        RestoreEggs(eggs[index], eggs[i]);
-    }
+        long long newNum = 0;
+        switch (i)
+        {
+        case 0:
+            newNum = nums[0] + nums[1];
+            break;
+        case 1:
+            newNum = nums[0] - nums[1];
+            break;
+        case 2:
+            newNum = nums[0] * nums[1];
+            break;
+        case 3:
+            if (nums[0] < 0)
+            {
+                newNum = (-(-nums[0]) / nums[1]);   
+            }
+            else
+            {
+                newNum = nums[0] / nums[1];
+            }
+            break;
+        default:
+            break;
+        }
 
-    if (!hasTarget)
-    {
-        return BackTrack(eggs, maxLevel, count, index + 1);
+        vector<long long> newNums;
+        newNums.push_back(newNum);
+
+        const long long numSize = static_cast<long long>(nums.size());
+        for (long long j = 2; j < numSize; ++j)
+        {
+            newNums.push_back(nums[j]);
+        }
+        
+        op--;
+        BackTrack(newNums, ops, maxValue, minValue);
+        op++;
     }
 }
 
@@ -114,24 +69,26 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n;
+    long long n;
     cin >> n;
 
-    vector<CEgg> eggs;
-    
-    for (int i = 0; i < n; i++)
+    vector<long long> nums(n);
+    for (long long i = 0; i < n; ++i)
     {
-        int s, w;
-        cin >> s >> w;
-        
-        eggs.emplace_back(s, w);
+        cin >> nums[i];
     }
 
-    int count = 0;
+    unordered_map<long long, long long> ops = {{0, 0}, {1, 0}, {2, 0}, {3, 0},};
+    for (long long i = 0; i < 4; ++i)
+    {
+        cin >> ops[i];
+    }
 
-    BackTrack(eggs, n, count, 0);
+    long long maxValue = -1e9, minValue = 1e9;
+    BackTrack(nums, ops, maxValue, minValue);
 
-    cout << count << "\n";
-    
+    cout << maxValue << "\n";
+    cout << minValue << "\n";
+
     return 0;
 }
