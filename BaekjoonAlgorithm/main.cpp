@@ -1,102 +1,13 @@
-﻿#include <iostream>
+﻿#include <deque>
+#include <iostream>
+#include <deque>
 #include <unordered_map>
 #include <vector>
 using namespace std;
 
-long long CalcNums(vector<long long> nums, vector<long long> opVec)
+bool IsInRange(const int num)
 {
-    int priNum = 0;
-    for (const auto& op : opVec)
-    {
-        if (op >= 2)
-        {
-            priNum++;
-        }
-    }
-    
-    int index = 0;
-    while (priNum > 0)
-    {
-        const long long& op = opVec[index];
-        if (op >= 2)
-        {
-            priNum--;
-            if (op == 2)
-            {
-                nums[index] = nums[index] * nums[index + 1];
-            }
-            else if (op == 3)
-            {
-                if (nums[index] < 0)
-                {
-                    nums[index] = -(-nums[index] / nums[index + 1]);
-                }
-                else
-                {
-                    nums[index] = nums[index] / nums[index + 1];   
-                }
-            }
-            
-            nums.erase(nums.begin() + index + 1);
-            opVec.erase(opVec.begin() + index);
-        }
-        else
-        {
-            index++;
-        }
-
-        if (index >= static_cast<int>(opVec.size()))
-        {
-            break;
-        }
-    }
-
-    index = 0;
-    
-    while (!opVec.empty())
-    {
-        const long long& op = opVec[index];
-        if (op == 0)
-        {
-            nums[index] = nums[index] + nums[index + 1];
-        }
-        else if (op == 1)
-        {
-            nums[index] = nums[index] - nums[index + 1];
-        }
-            
-        nums.erase(nums.begin() + index + 1);
-        opVec.erase(opVec.begin() + index);
-    }
-    
-    return nums[0];
-}
-
-void BackTrack(vector<long long>& nums, vector<long long>& opVec, unordered_map<long long, long long>& ops, long long& maxValue, long long& minValue)
-{
-    if (nums.size() == opVec.size() + 1)
-    {
-        maxValue = max(CalcNums(nums, opVec), maxValue);
-        minValue = min(CalcNums(nums, opVec), minValue);
-
-        return;
-    }
-
-    const long long opSize = static_cast<long long>(ops.size());
-    for (long long i = 0; i < opSize; ++i)
-    {
-        long long& op = ops[i];
-        if (op == 0)
-        {
-            continue;
-        }
-
-        opVec.push_back(i);
-        op--;
-        BackTrack(nums, opVec, ops, maxValue, minValue);
-        op++;
-        opVec.pop_back();
-    }
+    return num >= 0 && num < 100001;
 }
 
 int main()
@@ -105,28 +16,45 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    long long n;
-    cin >> n;
+    int n, k;
+    cin >> n >> k;
 
-    vector<long long> nums(n);
-    for (long long i = 0; i < n; ++i)
+    if (n == k)
     {
-        cin >> nums[i];
+        cout << 0 << "\n";
+        return 0;
     }
 
-    unordered_map<long long, long long> ops = {{0, 0}, {1, 0}, {2, 0}, {3, 0},};
-    for (long long i = 0; i < 4; ++i)
-    {
-        cin >> ops[i];
-    }
-
-    long long maxValue = -1e9, minValue = 1e9;
-    vector<long long> opVec;
+    vector<int> distance(100001, 1e9);
+    vector<int> additionalSecond = {1, 1, 0};
     
-    BackTrack(nums, opVec, ops, maxValue, minValue);
+    deque<int> dq;
+    
+    dq.push_back(n);
+    distance[n] = 0;
+    
+    while (!dq.empty())
+    {
+        const int curr = dq.front();
+        dq.pop_front();
 
-    cout << maxValue << "\n";
-    cout << minValue << "\n";
+        vector<int> nums{curr - 1, curr + 1, curr * 2};
+        for (int i = 0; i < 3; ++i)
+        {
+            const int& num = nums[i];
+            if (IsInRange(num))
+            {
+                const int& additional = additionalSecond[i];
+                if (distance[num] > distance[curr] + additional)
+                {
+                    distance[num] = distance[curr] + additional;
+                    additional == 0 ? dq.push_front(num) : dq.push_back(num);
+                }
+            }    
+        } 
+    }
 
+    cout << distance[k] << "\n";
+    
     return 0;
 }
