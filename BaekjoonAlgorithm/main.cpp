@@ -1,47 +1,8 @@
 ﻿#include <iostream>
-#include <vector>
+#include <string>
 #include <unordered_map>
+#include <vector>
 using namespace std;
-
-class CSubject
-{
-public:
-    CSubject() {}
-    CSubject(const string& subjectName,
-        const double& mark,
-        const string& grade)
-            :SubjectName(subjectName)
-            , Mark(mark)
-            , Grade(grade)
-    {
-        TotalMark = Mark * markTable[grade];
-    }
-    
-    ~CSubject() {}
-
-public:
-    double GetTotalMark() const noexcept
-    {
-        return TotalMark;
-    }
-private:
-    unordered_map<string, double> markTable = {
-        {"A+", 4.5},
-        {"A0", 4.0},
-        {"B+", 3.5},
-        {"B0", 3.0},
-        {"C+", 2.5},
-        {"C0", 2.0},
-        {"D+", 1.5},
-        {"D0", 1.0},
-        {"F", 0},
-    };
-
-    string SubjectName;
-    double Mark = 0.0;
-    string Grade;
-    double TotalMark = 0.0;
-};
 
 int main()
 {
@@ -49,35 +10,29 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    const int n = 20;
-    vector<CSubject> subjects;
+    int numIndex = 0;
+    int val = 0;
 
-    double sumMark = 0.0;
-    for (int i = 0; i < n; ++i)
+    for (int i = 1; i <= 3; ++i)
     {
-        string subjectName;
-        double mark;
-        string grade;
-        cin >> subjectName >> mark >> grade;
-
-        if (grade == "P")
-        {
-            continue;
-        }
-
-        sumMark += mark;
+        string s;
+        cin >> s;
         
-        subjects.emplace_back(subjectName, mark, grade);
+        int tempVal = atoi(s.c_str());
+        if (tempVal > 0)
+        {
+            val = tempVal;
+            numIndex = i;
+        }
     }
 
-    double sumTotalMark = 0.0;
+    const int nextIndex = 4 - numIndex;
+    const int ansIndex = val + nextIndex;
 
-    for (const CSubject& subject : subjects)
-    {
-        sumTotalMark += subject.GetTotalMark();
-    }
-
-    cout << sumTotalMark / sumMark << "\n";
+    if (ansIndex % 15 == 0) cout << "FizzBuzz" << "\n";
+    else if (ansIndex % 3 == 0) cout << "Fizz" << "\n";
+    else if (ansIndex % 5 == 0) cout << "Buzz" << "\n";
+    else cout << ansIndex << "\n";
 
     return 0;
 }
