@@ -1,9 +1,12 @@
 ﻿#include <iostream>
-#include <queue>
-#include <string>
+#include <stack>
 #include <unordered_map>
-#include <vector>
 using namespace std;
+
+bool IsOperator(const char& c)
+{
+    return c == '+' || c == '-' || c == '*' || c == '/';
+}
 
 int main()
 {
@@ -11,66 +14,52 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m;
-    cin >> n >> m;
+    string s;
+    cin >> s;
 
-    vector<vector<int>> field(n + 2, vector<int>(m + 2, -1));
-    vector<vector<vector<int>>> distance(n + 2, vector<vector<int>>(m + 2, vector<int>(2, -1)));
+    string expression;
+    
+    unordered_map<char, int> opPri = {{'+', 1}, {'-', 1}, {'*', 2}, {'/', 2}, };
 
-    for (int i = 1; i <= n; ++i)
+    stack<char> st;
+    
+    for (const char& c : s)
     {
-        string s;
-        cin >> s;
-        
-        for (int j = 1; j <= m; ++j)
+        if (IsOperator(c))
         {
-            field[i][j] = s[j - 1] - '0';
+            while (!st.empty() && opPri[st.top()] >= opPri[c])
+            {
+                expression += st.top();
+                st.pop();
+            }
+            st.push(c);
+        }
+        else if (c == '(')
+        {
+            st.push(c);
+        }
+        else if (c == ')')
+        {
+            while (st.top() != '(')
+            {
+                expression += st.top();
+                st.pop();
+            }
+            st.pop();
+        }
+        else
+        {
+            expression += c;
         }
     }
 
-    vector<pair<int, int>> directions = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}, };
-    queue<tuple<int, int, int>> q;
-
-    q.push({1, 1, 0});
-    distance[1][1][0] = 1;
-
-    while (!q.empty())
+    while (!st.empty())
     {
-        const tuple<int, int, int> p = q.front();
-        q.pop();
-
-        const int y = get<0>(p);
-        const int x = get<1>(p);
-        const int broken = get<2>(p);
-
-        for (const auto d : directions)
-        {
-            const int ny = y + d.first;
-            const int nx = x + d.second;
-
-            if (field[ny][nx] == 0)
-            {
-                if (distance[ny][nx][broken] == -1)
-                {
-                    distance[ny][nx][broken] = distance[y][x][broken] + 1;
-                    q.push({ny, nx, broken});
-                }
-            }
-            else if (field[ny][nx] == 1 && broken == 0 && distance[ny][nx][broken] == -1)
-            {
-                distance[ny][nx][1] = distance[y][x][0] + 1;
-                q.push({ny, nx, 1});
-            }
-        }
+        expression += st.top();
+        st.pop();
     }
 
-    const int dist1 = distance[n][m][0];
-    const int dist2 = distance[n][m][1];
-
-    if (dist1 == -1 && dist2 == -1) cout << -1 << "\n";
-    else if (dist1 == -1) cout << dist2 << "\n";
-    else if (dist2 == -1) cout << dist1 << "\n";
-    else cout << min(dist1, dist2) << "\n";
-
+    cout << expression << "\n";
+    
     return 0;
 }
