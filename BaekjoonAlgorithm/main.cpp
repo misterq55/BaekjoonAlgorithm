@@ -1,12 +1,7 @@
 ﻿#include <iostream>
-#include <stack>
+#include <queue>
 #include <unordered_map>
 using namespace std;
-
-bool IsOperator(const char& c)
-{
-    return c == '+' || c == '-' || c == '*' || c == '/';
-}
 
 int main()
 {
@@ -14,52 +9,40 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    string s;
-    cin >> s;
+    int n;
+    cin >> n;
 
-    string expression;
+    vector<int> nums(n + 1);
+    priority_queue<int, vector<int>, greater<>> minHeap;
+    priority_queue<int> maxHeap;
     
-    unordered_map<char, int> opPri = {{'+', 1}, {'-', 1}, {'*', 2}, {'/', 2}, };
-
-    stack<char> st;
-    
-    for (const char& c : s)
+    for (int i = 1; i <= n; ++i)
     {
-        if (IsOperator(c))
+        cin >> nums[i];
+
+        if (maxHeap.empty() || nums[i] <= maxHeap.top())
         {
-            while (!st.empty() && opPri[st.top()] >= opPri[c])
-            {
-                expression += st.top();
-                st.pop();
-            }
-            st.push(c);
-        }
-        else if (c == '(')
-        {
-            st.push(c);
-        }
-        else if (c == ')')
-        {
-            while (st.top() != '(')
-            {
-                expression += st.top();
-                st.pop();
-            }
-            st.pop();
+            maxHeap.push(nums[i]);
         }
         else
         {
-            expression += c;
+            minHeap.push(nums[i]);
         }
-    }
+        
+        if (maxHeap.size() > minHeap.size() + 1)
+        {
+            minHeap.push(maxHeap.top());
+            maxHeap.pop();
+        }
 
-    while (!st.empty())
-    {
-        expression += st.top();
-        st.pop();
+        if (minHeap.size() > maxHeap.size())
+        {
+            maxHeap.push(minHeap.top());
+            minHeap.pop();
+        }
+        
+        cout << maxHeap.top() << '\n';
     }
-
-    cout << expression << "\n";
     
     return 0;
 }
