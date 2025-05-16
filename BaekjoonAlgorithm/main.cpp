@@ -2,33 +2,7 @@
 #include <vector>
 using namespace std;
 
-void RecursiveMakeStars(vector<vector<char>>& field, const int level, const int startY, const int startX)
-{
-    if (level == 3)
-    {
-        field[startY][startX] = '*';
-        field[startY + 1][startX - 1] = field[startY + 1][startX + 1] = '*';
-        field[startY + 2][startX - 2] = field[startY + 2][startX - 1] = field[startY + 2][startX] = field[startY + 2][startX + 1] = field[startY + 2][startX + 2] = '*';
-        return;
-    }
-
-    RecursiveMakeStars(field, level / 2, startY, startX);
-    RecursiveMakeStars(field, level / 2, startY + level / 2, startX - level / 2);
-    RecursiveMakeStars(field, level / 2, startY + level / 2, startX + level / 2);
-}
-
-void PrintStars(const vector<vector<char>>& field)
-{
-    for (const auto& row : field)
-    {
-        for (const auto& col : row)
-        {
-            cout << col;
-        }
-        
-        cout << "\n";
-    }
-}
+static int INF = static_cast<int>(1e9);
 
 int main()
 {
@@ -36,21 +10,60 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n;
-    cin >> n;
-
-    if (n == 1)
+    int n, m, r;
+    cin >> n >> m >> r;
+    vector<int> items(n + 1, 0);
+    vector<vector<int>> distances(n + 1, vector<int>(n + 1, 0));
+    
+    for (int i = 1; i <= n; ++i)
     {
-        cout << "*" << "\n";
-        return 0;
+        cin >> items[i];
     }
 
-    const int height = n;
-    const int width = n * 2 - 1;
-    vector<vector<char>> field(height, vector<char>(width, ' '));
+    for (int i = 1; i <= n; ++i)
+    {
+        for (int j = 1; j <= n; ++j)
+        {
+            if (i != j)
+            {
+                distances[i][j] = INF;
+            }
+        }
+    }
+    
+    for (int i = 0; i < r; ++i)
+    {
+        int u, v, w;
+        cin >> u >> v >> w;
+        distances[u][v] = distances[v][u] = w;
+    }
 
-    RecursiveMakeStars(field, n, 0, n - 1);
-    PrintStars(field);
+    for (int k = 1; k <= n; ++k)
+    {
+        for (int i = 1; i <= n; ++i)
+        {
+            for (int j = 1; j <= n; ++j)
+            {
+                distances[i][j] = min(distances[i][j], distances[i][k] + distances[k][j]);
+            }
+        }
+    }
 
+    int maxValue = 0;
+    for (int i = 1; i <= n; ++i)
+    {
+        int itemsSum = 0;
+        for (int j = 1; j <= n; ++j)
+        {
+            if (distances[i][j] <= m)
+            {
+                itemsSum += items[j];
+            }
+        }
+        maxValue = max(maxValue, itemsSum);
+    }
+
+    cout << maxValue << "\n";
+    
     return 0;
 }
