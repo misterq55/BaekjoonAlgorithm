@@ -2,62 +2,32 @@
 #include <vector>
 using namespace std;
 
-void RecursiveMakeStars(vector<vector<char>>& field, const int level, const int startY, const int startX,
-                        const int height, const int width, const int endEdgeY, const int endEdgeX)
+void RecursiveMakeStars(vector<vector<char>>& field, const int level, const int startY, const int startX)
 {
-    int y = startY;
-    int x = startX;
-
-    if (level == 1)
+    if (level == 3)
     {
-        x--;
-        field[y][x--] = '*';
-        field[y++][x] = '*';
-        field[y++][x] = '*';
-        field[y][x] = '*';
-
+        field[startY][startX] = '*';
+        field[startY + 1][startX - 1] = field[startY + 1][startX + 1] = '*';
+        field[startY + 2][startX - 2] = field[startY + 2][startX - 1] = field[startY + 2][startX] = field[startY + 2][startX + 1] = field[startY + 2][startX + 2] = '*';
         return;
     }
 
-    while (x > endEdgeX)
-    {
-        field[y][x--] = '*';
-    }
-
-    while (y < height - 1)
-    {
-        field[y++][x] = '*';
-    }
-
-    while (x < width - 1)
-    {
-        field[y][x++] = '*';
-    }
-
-    while (y > endEdgeY)
-    {
-        field[y--][x] = '*';
-    }
-
-    RecursiveMakeStars(field, level - 1, y + 1, x, height - 2, width - 2, endEdgeY + 2, endEdgeX + 2);
+    RecursiveMakeStars(field, level / 2, startY, startX);
+    RecursiveMakeStars(field, level / 2, startY + level / 2, startX - level / 2);
+    RecursiveMakeStars(field, level / 2, startY + level / 2, startX + level / 2);
 }
 
-vector<string> MakeStringStars(const vector<vector<char>>& field, const int height, const int width)
+void PrintStars(const vector<vector<char>>& field)
 {
-    vector<string> result;
-    for (int i = 0; i < height; ++i)
+    for (const auto& row : field)
     {
-        string s;
-        for (int j = 0; j < width; ++j)
+        for (const auto& col : row)
         {
-            s += field[i][j];
+            cout << col;
         }
         
-        s.erase(s.find_last_not_of(' ') + 1);
-        result.push_back(s);
+        cout << "\n";
     }
-
-    return move(result);
 }
 
 int main()
@@ -75,17 +45,12 @@ int main()
         return 0;
     }
 
-    const int height = n * 3 + (n - 1);
-    const int width = (n - 1) * 4 + 1;
+    const int height = n;
+    const int width = n * 2 - 1;
     vector<vector<char>> field(height, vector<char>(width, ' '));
 
-    RecursiveMakeStars(field, n, 0, width - 1, height, width, 1, 0);
-    vector<string> result = MakeStringStars(field, height, width);
-
-    for (const string& s : result)
-    {
-        cout << s << "\n";
-    }
+    RecursiveMakeStars(field, n, 0, n - 1);
+    PrintStars(field);
 
     return 0;
 }
