@@ -2,7 +2,45 @@
 #include <vector>
 using namespace std;
 
-static int INF = static_cast<int>(1e9);
+class CUnionFind
+{
+public:
+    CUnionFind() {}
+    ~CUnionFind() {}
+
+public:
+    void Initialize(int n)
+    {
+        parent.resize(n);
+        for (int i = 0; i < n; i++)
+        {
+            parent[i] = i;
+        }
+    }
+    
+    int Find(int p)
+    {
+        if (p != parent[p])
+        {
+            parent[p] = Find(p);
+        }
+        return parent[p];
+    }
+
+    void Union(int p, int q)
+    {
+        p = Find(p);
+        q = Find(q);
+
+        if (p != q)
+        {
+            parent[p] = q;
+        }
+    }
+
+private:
+    vector<int> parent;
+};
 
 int main()
 {
@@ -10,60 +48,47 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m, r;
-    cin >> n >> m >> r;
-    vector<int> items(n + 1, 0);
-    vector<vector<int>> distances(n + 1, vector<int>(n + 1, 0));
+    int ans = 0;
     
-    for (int i = 1; i <= n; ++i)
-    {
-        cin >> items[i];
-    }
+    int n, m;
+    cin >> n >> m;
 
-    for (int i = 1; i <= n; ++i)
+    int truth;
+    cin >> truth;
+
+    if (truth == 0)
     {
-        for (int j = 1; j <= n; ++j)
-        {
-            if (i != j)
-            {
-                distances[i][j] = INF;
-            }
-        }
+        cout << m << "\n";
+        return 0;
     }
     
-    for (int i = 0; i < r; ++i)
+    vector<int> truthArr;
+
+    for (int i = 0; i < truth; ++i)
     {
-        int u, v, w;
-        cin >> u >> v >> w;
-        distances[u][v] = distances[v][u] = w;
+        int truthNum;
+        cin >> truthNum;
+        truthArr.push_back(truthNum);
     }
 
-    for (int k = 1; k <= n; ++k)
+    for (int i = 0; i < m; ++i)
     {
-        for (int i = 1; i <= n; ++i)
+        int partyPeopleNum;
+        cin >> partyPeopleNum;
+
+        for (int j = 0; j < partyPeopleNum; ++j)
         {
-            for (int j = 1; j <= n; ++j)
+            int partyPeopleNum;
+            cin >> partyPeopleNum;
+
+            if (find(truthArr.begin(), truthArr.end(), partyPeopleNum) != truthArr.end())
             {
-                distances[i][j] = min(distances[i][j], distances[i][k] + distances[k][j]);
+                ans++;
             }
         }
     }
 
-    int maxValue = 0;
-    for (int i = 1; i <= n; ++i)
-    {
-        int itemsSum = 0;
-        for (int j = 1; j <= n; ++j)
-        {
-            if (distances[i][j] <= m)
-            {
-                itemsSum += items[j];
-            }
-        }
-        maxValue = max(maxValue, itemsSum);
-    }
-
-    cout << maxValue << "\n";
+    cout << m - ans << "\n";
     
     return 0;
 }
