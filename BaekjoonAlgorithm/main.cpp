@@ -11,8 +11,8 @@ public:
 public:
     void Initialize(int n)
     {
-        parent.resize(n);
-        for (int i = 0; i < n; i++)
+        parent.resize(n + 1);
+        for (int i = 1; i <= n; i++)
         {
             parent[i] = i;
         }
@@ -20,11 +20,12 @@ public:
     
     int Find(int p)
     {
-        if (p != parent[p])
+        if  (parent[p] != p)
         {
-            parent[p] = Find(p);
+            return Find(parent[p]);
         }
-        return parent[p];
+
+        return p;
     }
 
     void Union(int p, int q)
@@ -48,11 +49,14 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
+    CUnionFind unionFind;
     int ans = 0;
     
     int n, m;
     cin >> n >> m;
 
+    unionFind.Initialize(n);
+    
     int truth;
     cin >> truth;
 
@@ -64,31 +68,41 @@ int main()
     
     vector<int> truthArr;
 
+    int prevTruthNum = 0;
     for (int i = 0; i < truth; ++i)
     {
         int truthNum;
         cin >> truthNum;
-        truthArr.push_back(truthNum);
+
+        if (i != 0)
+        {
+            unionFind.Union(prevTruthNum, truthNum);
+        }
+        
+        prevTruthNum = truthNum;
     }
 
     for (int i = 0; i < m; ++i)
     {
-        int partyPeopleNum;
-        cin >> partyPeopleNum;
+        int party;
+        cin >> party;
 
-        for (int j = 0; j < partyPeopleNum; ++j)
+        int prevPartyNum = 0;
+        for (int j = 0; j < party; ++j)
         {
-            int partyPeopleNum;
-            cin >> partyPeopleNum;
+            int partyNum;
+            cin >> partyNum;
 
-            if (find(truthArr.begin(), truthArr.end(), partyPeopleNum) != truthArr.end())
+            if (partyNum != -1)
             {
-                ans++;
+                unionFind.Union(prevPartyNum, partyNum);
             }
+
+            prevPartyNum = partyNum;
         }
     }
 
-    cout << m - ans << "\n";
+    cout << ans << "\n";
     
     return 0;
 }
