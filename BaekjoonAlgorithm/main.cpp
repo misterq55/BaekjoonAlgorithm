@@ -5,8 +5,13 @@ using namespace std;
 class CUnionFind
 {
 public:
-    CUnionFind() {}
-    ~CUnionFind() {}
+    CUnionFind()
+    {
+    }
+
+    ~CUnionFind()
+    {
+    }
 
 public:
     void Initialize(int n)
@@ -17,12 +22,12 @@ public:
             parent[i] = i;
         }
     }
-    
+
     int Find(int p)
     {
-        if  (parent[p] != p)
+        if (parent[p] != p)
         {
-            return Find(parent[p]);
+            parent[p] = Find(parent[p]);
         }
 
         return p;
@@ -51,12 +56,12 @@ int main()
 
     CUnionFind unionFind;
     int ans = 0;
-    
+
     int n, m;
     cin >> n >> m;
 
     unionFind.Initialize(n);
-    
+
     int truth;
     cin >> truth;
 
@@ -65,44 +70,54 @@ int main()
         cout << m << "\n";
         return 0;
     }
-    
-    vector<int> truthArr;
 
     int prevTruthNum = 0;
-    for (int i = 0; i < truth; ++i)
+    
+    for (int i = 1; i <= truth; ++i)
     {
         int truthNum;
         cin >> truthNum;
 
-        if (i != 0)
+        if (i != 1)
         {
             unionFind.Union(prevTruthNum, truthNum);
         }
-        
+
         prevTruthNum = truthNum;
     }
 
+    vector<int> partyArr;
     for (int i = 0; i < m; ++i)
     {
         int party;
         cin >> party;
 
         int prevPartyNum = 0;
-        for (int j = 0; j < party; ++j)
+        for (int j = 1; j <= party; ++j)
         {
             int partyNum;
             cin >> partyNum;
 
-            if (partyNum != -1)
+            if (j != 1)
             {
                 unionFind.Union(prevPartyNum, partyNum);
             }
 
             prevPartyNum = partyNum;
         }
+
+        partyArr.push_back(prevPartyNum);
+    }
+
+    for (const int partyNum : partyArr)
+    {
+        if (unionFind.Find(prevTruthNum) != unionFind.Find(partyNum))
+        {
+            ans++;
+        }
     }
 
     cout << ans << "\n";
-    
+
     return 0;
 }
