@@ -2,51 +2,14 @@
 #include <vector>
 using namespace std;
 
-class CUnionFind
+void TopDown(vector<int>& dp, vector<vector<int>>& employees, const int emplyee)
 {
-public:
-    CUnionFind()
+    for (const auto& root : employees[emplyee])
     {
+        dp[root] += dp[emplyee];
+        TopDown(dp, employees, root);
     }
-
-    ~CUnionFind()
-    {
-    }
-
-public:
-    void Initialize(int n)
-    {
-        parent.resize(n + 1);
-        for (int i = 1; i <= n; i++)
-        {
-            parent[i] = i;
-        }
-    }
-
-    int Find(int p)
-    {
-        if (parent[p] != p)
-        {
-            parent[p] = Find(parent[p]);
-        }
-
-        return p;
-    }
-
-    void Union(int p, int q)
-    {
-        p = Find(p);
-        q = Find(q);
-
-        if (p != q)
-        {
-            parent[p] = q;
-        }
-    }
-
-private:
-    vector<int> parent;
-};
+}
 
 int main()
 {
@@ -54,70 +17,40 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    CUnionFind unionFind;
-    int ans = 0;
-
     int n, m;
     cin >> n >> m;
 
-    unionFind.Initialize(n);
-
-    int truth;
-    cin >> truth;
-
-    if (truth == 0)
+    vector<vector<int>> employees(n + 1);
+    vector<int> dp(n + 1, 0);
+    for (int i = 1; i <= n; ++i)
     {
-        cout << m << "\n";
-        return 0;
+        int boss;
+        cin >> boss;
+        if (boss == -1)
+        {
+            continue;
+        }
+        
+        employees[boss].push_back(i);
     }
 
-    int prevTruthNum = 0;
+    vector<int> weights(m + 1);
+    for (int i = 1; i <= m; ++i)
+    {
+        int employee;
+        int w;
+        cin >> employee >> w;
+        dp[employee] += w;
+    }
+
+    TopDown(dp, employees, 1);
+
+    for (int i = 1; i <= n; ++i)
+    {
+        cout << dp[i] << " ";
+    }
     
-    for (int i = 1; i <= truth; ++i)
-    {
-        int truthNum;
-        cin >> truthNum;
-
-        if (i != 1)
-        {
-            unionFind.Union(prevTruthNum, truthNum);
-        }
-
-        prevTruthNum = truthNum;
-    }
-
-    vector<int> partyArr;
-    for (int i = 0; i < m; ++i)
-    {
-        int party;
-        cin >> party;
-
-        int prevPartyNum = 0;
-        for (int j = 1; j <= party; ++j)
-        {
-            int partyNum;
-            cin >> partyNum;
-
-            if (j != 1)
-            {
-                unionFind.Union(prevPartyNum, partyNum);
-            }
-
-            prevPartyNum = partyNum;
-        }
-
-        partyArr.push_back(prevPartyNum);
-    }
-
-    for (const int partyNum : partyArr)
-    {
-        if (unionFind.Find(prevTruthNum) != unionFind.Find(partyNum))
-        {
-            ans++;
-        }
-    }
-
-    cout << ans << "\n";
+    cout << "\n";
 
     return 0;
 }
