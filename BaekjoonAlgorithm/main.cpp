@@ -1,44 +1,31 @@
 ﻿#include <iostream>
-#include <queue>
+#include <unordered_map>
 #include <vector>
 using namespace std;
 
-vector<int> Dijkstra(const vector<vector<pair<int, int>>>& graph, const int start)
+void BackTrack(const vector<vector<int>>& field, vector<int>& charCounter,
+               vector<pair<int, int>>& directions, const int level, int& maxCount, pair<int, int> pos)
 {
-    const int INF = static_cast<int>(1e9);
-    vector<int> distances(graph.size(), INF);
-
-    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;
-    pq.push({0, start});
-    distances[start] = 0;
-
-    while (!pq.empty())
+    maxCount = max(maxCount, level);
+    
+    for (const auto& direction : directions)
     {
-        const pair<int, int> current = pq.top();
-        pq.pop();
+        const int ny = pos.first + direction.first;
+        const int nx = pos.second + direction.second;
 
-        const int cost = current.first;
-        const int u = current.second;
-
-        if (cost > distances[u])
+        const int& nCh = field[ny][nx];
+        if (nCh == -1)
         {
             continue;
         }
 
-        for (const pair<int, int>& node : graph[u])
+        if (!charCounter[nCh])
         {
-            const int v = node.second;
-            const int w = node.first;
-
-            if (distances[v] > distances[u] + w)
-            {
-                distances[v] = distances[u] + w;
-                pq.push(node);
-            }
+            charCounter[nCh]++;
+            BackTrack(field, charCounter, directions, level + 1, maxCount, {ny, nx});
+            charCounter[nCh]--;
         }
     }
-
-    return move(distances);
 }
 
 int main()
@@ -47,28 +34,29 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m, x;
-    cin >> n >> m >> x;
+    int n, m;
+    cin >> n >> m;
 
-    vector<vector<pair<int, int>>> graph0(n + 1), graph1(n + 1);
-    for (int i = 0; i < m; ++i)
-    {
-        int u, v, w;
-        cin >> u >> v >> w;
-        graph0[u].push_back({w, v});
-        graph1[v].push_back({w, u});
-    }
+    vector<int> charCounter(26, 0);
+    vector<vector<int>> field(n + 2, vector<int>(m + 2, -1));
+    vector<pair<int, int>> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
 
-    vector<int> fromX = Dijkstra(graph0, x);
-    vector<int> toX = Dijkstra(graph1, x);
-
-    int maxValue = 0;
     for (int i = 1; i <= n; ++i)
     {
-        maxValue = max(maxValue, fromX[i] + toX[i]);
+        string s;
+        cin >> s;
+        for (int j = 1; j <= m; ++j)
+        {
+            field[i][j] = s[j - 1] - 'A';
+        }
     }
 
-    cout << maxValue << "\n";
-    
+    int maxCount = 0;
+    charCounter[field[1][1]]++;
+    BackTrack(field, charCounter, directions, 1, maxCount, {1, 1});
+    charCounter[field[1][1]]--;
+
+    cout << maxCount << "\n";
+
     return 0;
 }
