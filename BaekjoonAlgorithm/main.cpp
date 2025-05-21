@@ -1,15 +1,7 @@
 ﻿#include <iostream>
+#include <queue>
 #include <vector>
 using namespace std;
-
-void TopDown(vector<int>& dp, vector<vector<int>>& employees, const int emplyee)
-{
-    for (const auto& root : employees[emplyee])
-    {
-        dp[root] += dp[emplyee];
-        TopDown(dp, employees, root);
-    }
-}
 
 int main()
 {
@@ -17,40 +9,78 @@ int main()
     cin.tie(NULL);
     cout.tie(NULL);
 
-    int n, m;
-    cin >> n >> m;
+    int n;
+    cin >> n;
+    
+    vector<vector<pair<int, int>>> tree(n + 1);
 
-    vector<vector<int>> employees(n + 1);
-    vector<int> dp(n + 1, 0);
     for (int i = 1; i <= n; ++i)
     {
-        int boss;
-        cin >> boss;
-        if (boss == -1)
-        {
-            continue;
-        }
+        int index;
+        cin >> index;
         
-        employees[boss].push_back(i);
-    }
+        while (true)
+        {
+            int node;
+            cin >> node;
+            
+            if (node == -1)
+            {
+                break;
+            }
 
-    vector<int> weights(m + 1);
-    for (int i = 1; i <= m; ++i)
-    {
-        int employee;
-        int w;
-        cin >> employee >> w;
-        dp[employee] += w;
-    }
+            int weight;
+            cin >> weight;
 
-    TopDown(dp, employees, 1);
-
-    for (int i = 1; i <= n; ++i)
-    {
-        cout << dp[i] << " ";
+            tree[index].push_back(make_pair(weight, node));
+        }
     }
     
-    cout << "\n";
+    vector<pair<int, int>> data = {{0, 1}};
+    vector<int> distances;
+    int ans = 0;
 
+    for (int i = 0; i < 2; ++i)
+    {
+        priority_queue<pair<int, int>> pq;
+        distances = move(vector<int>(n + 1, -1));
+    
+        pq.push(data[i]);
+        distances[data[i].second] = 0;
+        
+        while (!pq.empty())
+        {
+            const pair<int, int> curr = pq.top();
+            pq.pop();
+
+            for (const pair<int, int>& node : tree[curr.second])
+            {
+                if (distances[node.second] == -1)
+                {
+                    distances[node.second] = distances[curr.second] + node.first;
+                    pq.push(node);
+                }
+            }
+        }
+
+        int maxDistIndex = 0;
+        int maxDist = 0;
+        for (int j = 1; j <= n; ++j)
+        {
+            const int distance = distances[j];
+            if (distance > maxDist)
+            {
+                maxDist = distance;
+                maxDistIndex = j;
+            }
+        }
+
+        ans = maxDist;
+
+        data.push_back({0, maxDistIndex});
+    }
+
+    cout << ans << "\n";
+    
     return 0;
 }
