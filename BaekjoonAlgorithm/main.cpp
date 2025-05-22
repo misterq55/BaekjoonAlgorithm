@@ -1,32 +1,9 @@
 ﻿#include <iostream>
-#include <unordered_map>
+#include <queue>
 #include <vector>
 using namespace std;
 
-void BackTrack(const vector<vector<int>>& field, vector<int>& charCounter,
-               vector<pair<int, int>>& directions, const int level, int& maxCount, pair<int, int> pos)
-{
-    maxCount = max(maxCount, level);
-    
-    for (const auto& direction : directions)
-    {
-        const int ny = pos.first + direction.first;
-        const int nx = pos.second + direction.second;
-
-        const int& nCh = field[ny][nx];
-        if (nCh == -1)
-        {
-            continue;
-        }
-
-        if (!charCounter[nCh])
-        {
-            charCounter[nCh]++;
-            BackTrack(field, charCounter, directions, level + 1, maxCount, {ny, nx});
-            charCounter[nCh]--;
-        }
-    }
-}
+static const int INF = static_cast<int>(1e9);
 
 int main()
 {
@@ -37,26 +14,75 @@ int main()
     int n, m;
     cin >> n >> m;
 
-    vector<int> charCounter(26, 0);
-    vector<vector<int>> field(n + 2, vector<int>(m + 2, -1));
-    vector<pair<int, int>> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+    vector<vector<pair<int, int>>> graph(n + 1);
+    vector<int> distances(n + 1, INF);
+    vector<int> parents(n + 1, -1);
 
-    for (int i = 1; i <= n; ++i)
+    for (int i = 1; i <= m; ++i)
     {
-        string s;
-        cin >> s;
-        for (int j = 1; j <= m; ++j)
+        int u, v, w;
+        cin >> u >> v >> w;
+        graph[u].push_back({w, v});
+    }
+
+    int start, end;
+    cin >> start >> end;
+
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;
+
+    pq.push({0, start});
+    distances[start] = 0;
+    
+    while (!pq.empty())
+    {
+        const pair<int, int> curr = pq.top();
+        pq.pop();
+
+        const int u = curr.second;
+        const int cost = curr.first;
+
+        if (distances[u] < cost)
         {
-            field[i][j] = s[j - 1] - 'A';
+            continue;
+        }
+
+        for (const pair<int, int>& node : graph[u])
+        {
+            const int w = node.first;
+            const int v = node.second;
+
+            if (distances[v] > distances[u] + w)
+            {
+                parents[v] = u;
+                distances[v] = distances[u] + w;
+                pq.push({distances[v], v});
+            }
         }
     }
 
-    int maxCount = 0;
-    charCounter[field[1][1]]++;
-    BackTrack(field, charCounter, directions, 1, maxCount, {1, 1});
-    charCounter[field[1][1]]--;
+    cout << distances[end] << "\n";
 
-    cout << maxCount << "\n";
+    int count = 0;
+    int index = end;
+    vector<int> cities;
+    while (index != start)
+    {
+        ++count;
+        cities.push_back(index);
+        index = parents[index];
+    }
 
+    ++count;
+    cities.push_back(start);
+
+    cout << count << "\n";
+    
+    const int size = static_cast<int>(cities.size());
+    for (int i = size - 1; i >= 0; --i)
+    {
+        cout << cities[i] << " ";
+    }
+    cout << "\n";
+    
     return 0;
 }
